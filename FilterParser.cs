@@ -39,6 +39,7 @@ namespace Stashie
         private const string PARAMETER_METAMORPHGOODREWARDSAMOUNT = "goodrewards";
         private const string PARAMETER_METAMORPHBADREWARDSAMOUNT = "badrewards";
         private const string PARAMETER_DELIRIUMREWARDSAMOUNT = "deliriumrewards";
+        private const string PARAMETER_SCOURGETIER = "scourgetier";
 
         //Boolean
         private const string PARAMETER_IDENTIFIED = "identified";
@@ -325,6 +326,11 @@ namespace Stashie
                     stringComp.IntParameter = data => data.DeliriumStacks;
                     stringComp.CompareInt = int.Parse(value);
                     stringComp.StringParameter = data => data.DeliriumStacks.ToString();
+                    break;
+                case PARAMETER_SCOURGETIER:
+                    stringComp.IntParameter = data => data.ScourgeTier;
+                    stringComp.CompareInt = int.Parse(value);
+                    stringComp.StringParameter = data => data.ScourgeTier.ToString();
                     break;
                 case PARAMETER_SKILLGEMLEVEL:
                     stringComp.IntParameter = data => data.SkillGemLevel;

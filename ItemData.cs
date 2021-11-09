@@ -36,6 +36,7 @@ namespace Stashie
         public int LargestLinkSize { get; }
         public int DeliriumStacks { get; }
         //public int ClusterJewelpassives { get; }
+        public int ScourgeTier { get; }
         public bool BIdentified { get; }
         public bool isCorrupted { get; }
         public bool isElder { get; }
@@ -73,6 +74,7 @@ namespace Stashie
             isWarlord = baseComponent.isWarlord;
             isHunter = baseComponent.isHunter;
             isInfluenced = isCrusader || isRedeemer || isWarlord || isHunter || isShaper || isElder;
+            ScourgeTier = baseComponent.ScourgedTier;
 
             var mods = item.GetComponent<Mods>();
             Rarity = mods?.ItemRarity ?? ItemRarity.Normal;
