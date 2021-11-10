@@ -13,10 +13,10 @@ namespace Stashie
 {
     public class ItemData
     {
-        public static readonly List<string> goodRewards = new List<string>{ "Drops additional Currency Items", "Drops additional Currency Shards", "Drops additional Fossils", "Drops additional Divination Cards", "Drops additional Quality Gems", "Drops additional Map Fragments", "Drops additional Catalysts", "Drops additonal Essences", "Drops additional Legion Incubators", "Drops additional Polished Scarabs" };
+        //public static readonly List<string> goodRewards = new List<string>{ "Drops additional Currency Items", "Drops additional Currency Shards", "Drops additional Fossils", "Drops additional Divination Cards", "Drops additional Quality Gems", "Drops additional Map Fragments", "Drops additional Catalysts", "Drops additonal Essences", "Drops additional Legion Incubators", "Drops additional Polished Scarabs" };
         //private static readonly List<string> badRewards = new List<string> { "additionalveiledarmour", "additionalrareweapons", "additionalrarearmour", "additionalperanduscoins", "additionalraretalismans", "arareweapon" };
         //private static readonly List<string> mediocreRewards = new List<string> { "amapitem", "additionalmaps", "rarejewellery", "itemisedprophecies", "enchantedboots", "additionalrustedscarabs", "ashaperweapon", "auniqueweapon", "anabyssaljewel", "incursionweapon", "additonaluniqueitems", "additionalbreachsplinters" };
-        private static readonly HashSet<string> goodRewardsHS = new HashSet<string>(goodRewards);
+        //private static readonly HashSet<string> goodRewardsHS = new HashSet<string>(goodRewards);
         public NormalInventoryItem InventoryItem { get; }
         public string Path { get; }
         public string ClassName { get; }
@@ -118,26 +118,26 @@ namespace Stashie
                 Name = mods?.UniqueName ?? "";
             }
             
-            if (BaseName.StartsWith("Metamorph"))
-            {
-                var stats = mods?.HumanStats;
-                if (stats != null)
-                {
-                    MetamorphSampleRewardsAmount = stats.Count();                   
-       
-                    //var _stats = stats.Select(str => str.ToLower()).ToList();
-                    //_stats = _stats.Select(str => str.Replace(" ", "")).ToList();
-                    //_stats = _stats.Select(x => x.Substring(5)).ToList();
-
-                    //MetamorphSampleGoodRewardsAmount = stats.Count(x => goodRewardsHS.Contains(x));
-
-                    //MetamorphSampleGoodRewardsAmount = _stats.Where(stat => goodRewards.Any(rewards => rewards.Equals(stat))).Count();
-                    //MetamorphSampleBadRewardsAmount = _stats.Where(stat => badRewards.Any(rewards => rewards.Equals(stat))).Count();
-                }else
-                {
-                    MetamorphSampleRewardsAmount = -1;
-                }
-            }            
+            //if (BaseName.StartsWith("Metamorph"))
+            //{
+            //    var stats = mods?.HumanStats;
+            //    if (stats != null)
+            //    {
+            //        MetamorphSampleRewardsAmount = stats.Count();                   
+            //
+            //        //var _stats = stats.Select(str => str.ToLower()).ToList();
+            //        //_stats = _stats.Select(str => str.Replace(" ", "")).ToList();
+            //        //_stats = _stats.Select(x => x.Substring(5)).ToList();
+            //
+            //        //MetamorphSampleGoodRewardsAmount = stats.Count(x => goodRewardsHS.Contains(x));
+            //
+            //        //MetamorphSampleGoodRewardsAmount = _stats.Where(stat => goodRewards.Any(rewards => rewards.Equals(stat))).Count();
+            //        //MetamorphSampleBadRewardsAmount = _stats.Where(stat => badRewards.Any(rewards => rewards.Equals(stat))).Count();
+            //    }else
+            //    {
+            //        MetamorphSampleRewardsAmount = -1;
+            //    }
+            //}            
         }
         
         public Vector2 GetClickPosCache()
@@ -154,58 +154,58 @@ namespace Stashie
             return new Vector2(x, y);
         }
         
-        public override string ToString()
-        {
-            /*
-            FieldInfo[] fields = typeof(ItemData).GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
-            string str = "\n";
-            foreach (var field in fields)
-            {
-                var name = field.Name;
-                var value = field.GetValue(this).ToString();
-                if (name == "goodRewards" || name == "goodRewardsHS" || name == "InventoryItem" || name == "clientRect") continue;
-                str += name + ": " + value + "\n";
-            }
-            return str;
-            */
-            
-            string itemdata = "\n" +
-                nameof(InventoryID) + ": " + InventoryID + "\n" +
-                nameof(Path) + ": " + Path + "\n" +
-                nameof(ClassName) + ": " + ClassName + "\n" +
-                nameof(BaseName) + ": " + BaseName + "\n" +
-                nameof(Name) + ": " + Name + "\n" +
-                nameof(Description) + ": " + Description + "\n" +
-                nameof(ProphecyName) + ": " + ProphecyName + "\n" +
-                nameof(ProphecyDescription) + ": " + ProphecyDescription + "\n" +
-                nameof(Rarity) + ": " + Rarity + "\n" +
-                nameof(ItemQuality) + ": " + ItemQuality + "\n" +
-                nameof(Veiled) + ": " + Veiled + "\n" +
-                nameof(Fractured) + ": " + Fractured + "\n" +
-                nameof(ItemLevel) + ": " + ItemLevel + "\n" +
-                nameof(MapTier) + ": " + MapTier + "\n" +
-                nameof(NumberOfSockets) + ": " + NumberOfSockets + "\n" +
-                nameof(LargestLinkSize) + ": " + LargestLinkSize + "\n" +
-                nameof(BIdentified) + ": " + BIdentified + "\n" +
-                nameof(isCorrupted) + ": " + isCorrupted + "\n" +
-                nameof(isCorrupted) + ": " + isCorrupted + "\n" +
-                nameof(isShaper) + ": " + isShaper + "\n" +
-                nameof(isCrusader) + ": " + isCrusader + "\n" +
-                nameof(isRedeemer) + ": " + isRedeemer + "\n" +
-                nameof(isHunter) + ": " + isHunter + "\n" +
-                nameof(isWarlord) + ": " + isWarlord + "\n" +
-                nameof(isInfluenced) + ": " + isInfluenced + "\n" +
-                nameof(Synthesised) + ": " + Synthesised + "\n" +
-                nameof(isBlightMap) + ": " + isBlightMap + "\n" +
-                nameof(isElderGuardianMap) + ": " + isElderGuardianMap + "\n" +
-                nameof(Enchanted) + ": " + Enchanted + "\n" +
-                nameof(SkillGemLevel) + ": " + SkillGemLevel + "\n" +
-                nameof(SkillGemQualityType) + ": " + SkillGemQualityType + "\n" +
-                nameof(MetamorphSampleRewardsAmount) + ": " + MetamorphSampleRewardsAmount + "\n" +
-                nameof(MetamorphSampleGoodRewardsAmount) + ": " + MetamorphSampleGoodRewardsAmount + "\n" +
-                nameof(MetamorphSampleBadRewardsAmount) + ": " + MetamorphSampleBadRewardsAmount + "\n";
-            return itemdata;
-
-        }
+        //public override string ToString()
+        //{
+        //    /*
+        //    FieldInfo[] fields = typeof(ItemData).GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
+        //    string str = "\n";
+        //    foreach (var field in fields)
+        //    {
+        //        var name = field.Name;
+        //        var value = field.GetValue(this).ToString();
+        //        if (name == "goodRewards" || name == "goodRewardsHS" || name == "InventoryItem" || name == "clientRect") continue;
+        //        str += name + ": " + value + "\n";
+        //    }
+        //    return str;
+        //    */
+        //    
+        //    string itemdata = "\n" +
+        //        nameof(InventoryID) + ": " + InventoryID + "\n" +
+        //        nameof(Path) + ": " + Path + "\n" +
+        //        nameof(ClassName) + ": " + ClassName + "\n" +
+        //        nameof(BaseName) + ": " + BaseName + "\n" +
+        //        nameof(Name) + ": " + Name + "\n" +
+        //        nameof(Description) + ": " + Description + "\n" +
+        //        nameof(ProphecyName) + ": " + ProphecyName + "\n" +
+        //        nameof(ProphecyDescription) + ": " + ProphecyDescription + "\n" +
+        //        nameof(Rarity) + ": " + Rarity + "\n" +
+        //        nameof(ItemQuality) + ": " + ItemQuality + "\n" +
+        //        nameof(Veiled) + ": " + Veiled + "\n" +
+        //        nameof(Fractured) + ": " + Fractured + "\n" +
+        //        nameof(ItemLevel) + ": " + ItemLevel + "\n" +
+        //        nameof(MapTier) + ": " + MapTier + "\n" +
+        //        nameof(NumberOfSockets) + ": " + NumberOfSockets + "\n" +
+        //        nameof(LargestLinkSize) + ": " + LargestLinkSize + "\n" +
+        //        nameof(BIdentified) + ": " + BIdentified + "\n" +
+        //        nameof(isCorrupted) + ": " + isCorrupted + "\n" +
+        //        nameof(isCorrupted) + ": " + isCorrupted + "\n" +
+        //        nameof(isShaper) + ": " + isShaper + "\n" +
+        //        nameof(isCrusader) + ": " + isCrusader + "\n" +
+        //        nameof(isRedeemer) + ": " + isRedeemer + "\n" +
+        //        nameof(isHunter) + ": " + isHunter + "\n" +
+        //        nameof(isWarlord) + ": " + isWarlord + "\n" +
+        //        nameof(isInfluenced) + ": " + isInfluenced + "\n" +
+        //        nameof(Synthesised) + ": " + Synthesised + "\n" +
+        //        nameof(isBlightMap) + ": " + isBlightMap + "\n" +
+        //        nameof(isElderGuardianMap) + ": " + isElderGuardianMap + "\n" +
+        //        nameof(Enchanted) + ": " + Enchanted + "\n" +
+        //        nameof(SkillGemLevel) + ": " + SkillGemLevel + "\n" +
+        //        nameof(SkillGemQualityType) + ": " + SkillGemQualityType + "\n" +
+        //        nameof(MetamorphSampleRewardsAmount) + ": " + MetamorphSampleRewardsAmount + "\n" +
+        //        nameof(MetamorphSampleGoodRewardsAmount) + ": " + MetamorphSampleGoodRewardsAmount + "\n" +
+        //        nameof(MetamorphSampleBadRewardsAmount) + ": " + MetamorphSampleBadRewardsAmount + "\n";
+        //    return itemdata;
+        //
+        //}
     }
 }
