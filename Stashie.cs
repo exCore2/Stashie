@@ -332,14 +332,15 @@ namespace Stashie
             };
             try
             {
-                var inventory = GameController.Game.IngameState.IngameUi.InventoryPanel[InventoryIndex.PlayerInventory];
-                foreach (var item in inventory.VisibleInventoryItems)
+                var inventory_server = GameController.IngameState.Data.ServerData.PlayerInventories[0];
+
+                foreach (var item in inventory_server.Inventory.InventorySlotItems)
                 {
                     var baseC = item.Item.GetComponent<Base>();
                     var itemSizeX = baseC.ItemCellsSizeX;
                     var itemSizeY = baseC.ItemCellsSizeY;
-                    var inventPosX = item.InventPosX;
-                    var inventPosY = item.InventPosY;
+                    var inventPosX = item.PosX;
+                    var inventPosY = item.PosY;
                     for (var y = 0; y < itemSizeY; y++)
                     for (var x = 0; x < itemSizeX; x++)
                         Settings.IgnoredCells[y + inventPosY, x + inventPosX] = 1;
@@ -375,7 +376,7 @@ namespace Stashie
             }
             catch (Exception e)
             {
-                LogError(e.ToString(), 10);
+                DebugWindow.LogError(e.ToString(), 10);
             }
 
             var numb = 1;
