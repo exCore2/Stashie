@@ -4,16 +4,17 @@ using ExileCore.PoEMemory.Models;
 using ExileCore.Shared.Enums;
 using ExileCore.Shared.Helpers;
 using SharpDX;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using static ExileCore.PoEMemory.MemoryObjects.ServerInventory;
 
 namespace Stashie
 {
     public class ItemData
     {
-        public NormalInventoryItem InventoryItem { get; }
         public string Path { get; }
         public string ClassName { get; }
         public string BaseName { get; }
@@ -54,11 +55,12 @@ namespace Stashie
         public uint InventoryID { get; }
         public Vector2 clientRect { get; }
 
-        public ItemData(NormalInventoryItem inventoryItem, BaseItemType baseItemType)
+        public ItemData(InventSlotItem inventoryItem, BaseItemType baseItemType, Vector2 clickPos)
         {
-            InventoryItem = inventoryItem;
-            InventoryID = inventoryItem.Item.InventoryId;
+
             var item = inventoryItem.Item;
+            InventoryID = inventoryItem.Item.InventoryId;
+
             Path = item.Path;
             var baseComponent = item.GetComponent<Base>();
             if (baseComponent == null) return;
@@ -103,7 +105,9 @@ namespace Stashie
             Name = baseComponent?.Name ?? "";
             Description = "";
             MapTier = item.GetComponent<Map>()?.Tier ?? 0;
-            clientRect = InventoryItem.GetClientRect().Center;
+
+            clientRect = clickPos;
+
             Name = mods?.UniqueName ?? Name;           
         }
         
@@ -111,7 +115,8 @@ namespace Stashie
         {
             return clientRect;
         }
-
+        /*
+        [Obsolete]
         public Vector2 GetClickPos()
         {
             var paddingPixels = 3;
@@ -119,6 +124,6 @@ namespace Stashie
             var x = MathHepler.Randomizer.Next((int) clientRect.TopLeft.X + paddingPixels, (int) clientRect.TopRight.X - paddingPixels);
             var y = MathHepler.Randomizer.Next((int) clientRect.TopLeft.Y + paddingPixels, (int) clientRect.BottomLeft.Y - paddingPixels);
             return new Vector2(x, y);
-        }
+        }*/
     }
 }

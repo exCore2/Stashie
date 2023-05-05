@@ -14,7 +14,9 @@ using ExileCore.Shared.Enums;
 using ExileCore.Shared.Nodes;
 using ImGuiNET;
 using SharpDX;
+using static ExileCore.PoEMemory.MemoryObjects.ServerInventory;
 using Vector4 = System.Numerics.Vector4;
+//using Vector2 = System.Numerics.Vector2;
 
 namespace Stashie
 {
@@ -612,10 +614,10 @@ namespace Stashie
 
         private IEnumerator ParseItems()
         {
-            var inventory = GameController.Game.IngameState.IngameUi.InventoryPanel[InventoryIndex.PlayerInventory];
-            var invItems = inventory.VisibleInventoryItems;
+            var inventory = GameController.Game.IngameState.Data.ServerData.PlayerInventories[0].Inventory;
+            var invItems = inventory.InventorySlotItems;
 
-            yield return new WaitFunctionTimed(() => invItems != null,true,500, "Player inventory->VisibleInventoryItems is null!");
+            yield return new WaitFunctionTimed(() => invItems != null,true,500, "ServerInventory->InventSlotItems is null!");
             _dropItems = new List<FilterResult>();
             _clickWindowOffset = GameController.Window.GetWindowRectangle().TopLeft;
             foreach (var invItem in invItems)
@@ -623,18 +625,39 @@ namespace Stashie
                 if (invItem.Item == null || invItem.Address == 0) continue;
                 if (CheckIgnoreCells(invItem)) continue;
                 var baseItemType = GameController.Files.BaseItemTypes.Translate(invItem.Item.Path);
-                var testItem = new ItemData(invItem, baseItemType);
-                //LogMessage(testItem.ToString());
+
+                var testItem = new ItemData(invItem, baseItemType, calculateClickPos(invItem));
                 var result = CheckFilters(testItem);
                 if (result != null)
                     _dropItems.Add(result);
             }
         }
-
-        private bool CheckIgnoreCells(NormalInventoryItem inventItem)
+        private Vector2 calculateClickPos(InventSlotItem invItem)
         {
-            var inventPosX = inventItem.InventPosX;
-            var inventPosY = inventItem.InventPosY;
+            //hacky clickpos calc work
+            
+            var InventoryPanelRectF = GameController.IngameState.IngameUi.InventoryPanel[InventoryIndex.PlayerInventory].GetClientRect();
+            var CellWidth = InventoryPanelRectF.Width / 12;
+            var CellHeight = InventoryPanelRectF.Height / 5;
+            var itemInventPosition = invItem.InventoryPosition;
+
+            Vector2 clickpos = new Vector2(
+                InventoryPanelRectF.Location.X + (CellWidth / 2) + (itemInventPosition.X * CellWidth), 
+                InventoryPanelRectF.Location.Y + (CellHeight / 2) + (itemInventPosition.Y * CellHeight)
+                );
+
+            //LogMessage($"CellWidth={CellWidth}, CellHeight={CellWidth}",5);
+            //LogMessage($"invPanelRectF.TopLeft.X = {InventoryPanelRectF.TopLeft.X}, invPanelRectF.TopLeft.Y = {InventoryPanelRectF.Location.Y}", 5);
+            //LogMessage($"itemInventPosition.X ={itemInventPosition.X}, itemInventPosition.Y ={itemInventPosition.Y}",5);
+            //LogMessage($"Clickpos.X = {clickpos.X}, Clickpos.Y = {clickpos.Y}",5);
+
+            return clickpos;
+        }
+
+        private bool CheckIgnoreCells(InventSlotItem inventItem)
+        {
+            var inventPosX = inventItem.PosX;
+            var inventPosY = inventItem.PosY;
 
             if (Settings.RefillCurrency &&
                 _customRefills.Any(x => x.InventPos.X == inventPosX && x.InventPos.Y == inventPosY))
