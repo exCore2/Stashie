@@ -35,10 +35,11 @@ namespace Stashie
         private const string PARAMETER_FRACTUREDMODS = "fractured";
         private const string PARAMETER_SKILLGEMLEVEL = "skillgemlevel";
         private const string PARAMTER_CLUSTERJEWELPASSIVES = "clusterjewelpassives";
-        private const string PARAMETER_METAMORPHREWARDSAMOUNT = "sampleStats";
-        private const string PARAMETER_METAMORPHGOODREWARDSAMOUNT = "goodrewards";
-        private const string PARAMETER_METAMORPHBADREWARDSAMOUNT = "badrewards";
+        //private const string PARAMETER_METAMORPHREWARDSAMOUNT = "sampleStats";
+        //private const string PARAMETER_METAMORPHGOODREWARDSAMOUNT = "goodrewards";
+        //private const string PARAMETER_METAMORPHBADREWARDSAMOUNT = "badrewards";
         private const string PARAMETER_DELIRIUMREWARDSAMOUNT = "deliriumrewards";
+        private const string PARAMETER_SCOURGETIER = "scourgetier";
 
         //Boolean
         private const string PARAMETER_IDENTIFIED = "identified";
@@ -326,26 +327,31 @@ namespace Stashie
                     stringComp.CompareInt = int.Parse(value);
                     stringComp.StringParameter = data => data.DeliriumStacks.ToString();
                     break;
+                case PARAMETER_SCOURGETIER:
+                    stringComp.IntParameter = data => data.ScourgeTier;
+                    stringComp.CompareInt = int.Parse(value);
+                    stringComp.StringParameter = data => data.ScourgeTier.ToString();
+                    break;
                 case PARAMETER_SKILLGEMLEVEL:
                     stringComp.IntParameter = data => data.SkillGemLevel;
                     stringComp.CompareInt = int.Parse(value);
                     stringComp.StringParameter = data => data.SkillGemLevel.ToString();
                     break;
-                case PARAMETER_METAMORPHREWARDSAMOUNT:
-                    stringComp.IntParameter = data => data.MetamorphSampleRewardsAmount;
-                    stringComp.CompareInt = int.Parse(value);
-                    stringComp.StringParameter = data => data.MetamorphSampleRewardsAmount.ToString();
-                    break;
-                case PARAMETER_METAMORPHGOODREWARDSAMOUNT:
-                    stringComp.IntParameter = data => data.MetamorphSampleGoodRewardsAmount;
-                    stringComp.CompareInt = int.Parse(value);
-                    stringComp.StringParameter = data => data.MetamorphSampleGoodRewardsAmount.ToString();
-                    break;
-                case PARAMETER_METAMORPHBADREWARDSAMOUNT:
-                    stringComp.IntParameter = data => data.MetamorphSampleBadRewardsAmount;
-                    stringComp.CompareInt = int.Parse(value);
-                    stringComp.StringParameter = data => data.MetamorphSampleBadRewardsAmount.ToString();
-                    break;
+                //case PARAMETER_METAMORPHREWARDSAMOUNT:
+                //    stringComp.IntParameter = data => data.MetamorphSampleRewardsAmount;
+                //    stringComp.CompareInt = int.Parse(value);
+                //    stringComp.StringParameter = data => data.MetamorphSampleRewardsAmount.ToString();
+                //    break;
+                //case PARAMETER_METAMORPHGOODREWARDSAMOUNT:
+                //    stringComp.IntParameter = data => data.MetamorphSampleGoodRewardsAmount;
+                //    stringComp.CompareInt = int.Parse(value);
+                //    stringComp.StringParameter = data => data.MetamorphSampleGoodRewardsAmount.ToString();
+                //    break;
+                //case PARAMETER_METAMORPHBADREWARDSAMOUNT:
+                //    stringComp.IntParameter = data => data.MetamorphSampleBadRewardsAmount;
+                //    stringComp.CompareInt = int.Parse(value);
+                //    stringComp.StringParameter = data => data.MetamorphSampleBadRewardsAmount.ToString();
+                //    break;
 
                 default:
                     DebugWindow.LogMsg($"Filter parser: Parameter is not defined in code: {parameter}", 10);

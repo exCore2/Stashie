@@ -56,7 +56,7 @@ namespace Stashie
         [Menu("tab (index)")] 
         public RangeNode<int> TabToVisitWhenDone { get; set; }
         [Menu("Go back to the tab you were in prior to Stashing")]
-        public ToggleNode BackToOriginalTab { get; }
+        public ToggleNode BackToOriginalTab { get; set; }
         public ToggleNode RefillCurrency { get; set; }
         public ListIndexNode CurrencyStashTab { get; set; }
         public ToggleNode AllowHaveMore { get; set; }
