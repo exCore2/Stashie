@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using ExileCore;
+using ExileCore.PoEMemory.MemoryObjects;
+using JM.LinqFaster;
 using SharpDX;
+using Stashie.Filter;
 
 namespace Stashie
 {
@@ -35,11 +39,9 @@ namespace Stashie
         private const string PARAMETER_FRACTUREDMODS = "fractured";
         private const string PARAMETER_SKILLGEMLEVEL = "skillgemlevel";
         private const string PARAMTER_CLUSTERJEWELPASSIVES = "clusterjewelpassives";
-        //private const string PARAMETER_METAMORPHREWARDSAMOUNT = "sampleStats";
-        //private const string PARAMETER_METAMORPHGOODREWARDSAMOUNT = "goodrewards";
-        //private const string PARAMETER_METAMORPHBADREWARDSAMOUNT = "badrewards";
         private const string PARAMETER_DELIRIUMREWARDSAMOUNT = "deliriumrewards";
         private const string PARAMETER_SCOURGETIER = "scourgetier";
+        private const string PARAMETER_MODAFFIX = "affix";
 
         //Boolean
         private const string PARAMETER_IDENTIFIED = "identified";
@@ -104,7 +106,7 @@ namespace Stashie
                     continue;
                 }
 
-                var newFilter = new CustomFilter {Name = filterLine.Substring(0, nameIndex).Trim(), Index = i + 1};
+                var newFilter = new CustomFilter { Name = filterLine.Substring(0, nameIndex).Trim(), Index = i + 1 };
 
                 var filterCommandsLine = filterLine.Substring(nameIndex + 1);
 
@@ -128,7 +130,7 @@ namespace Stashie
                     if (command.Contains(SYMBOL_COMMAND_FILTER_OR))
                     {
                         var orFilterCommands = command.Split(SYMBOL_COMMAND_FILTER_OR);
-                        var newOrFilter = new BaseFilter {BAny = true};
+                        var newOrFilter = new BaseFilter { BAny = true };
                         newFilter.Filters.Add(newOrFilter);
 
                         foreach (var t in orFilterCommands)
@@ -179,70 +181,70 @@ namespace Stashie
             }
             if (command.Contains(PARAMETER_IDENTIFIED))
             {
-                var identCommand = new IdentifiedItemFilter {BIdentified = command[0] != SYMBOL_NOT};
+                var identCommand = new IdentifiedItemFilter { BIdentified = command[0] != SYMBOL_NOT };
                 newFilter.Filters.Add(identCommand);
                 return true;
             }
 
             if (command.Contains(PARAMETER_ISCORRUPTED))
             {
-                var corruptedCommand = new CorruptedItemFilter {BCorrupted = command[0] != SYMBOL_NOT};
+                var corruptedCommand = new CorruptedItemFilter { BCorrupted = command[0] != SYMBOL_NOT };
                 newFilter.Filters.Add(corruptedCommand);
                 return true;
             }
 
             if (command.Contains(PARAMETER_ISELDER))
             {
-                var elderCommand = new ElderItemFiler {isElder = command[0] != SYMBOL_NOT};
+                var elderCommand = new ElderItemFiler { isElder = command[0] != SYMBOL_NOT };
                 newFilter.Filters.Add(elderCommand);
                 return true;
             }
 
             if (command.Contains(PARAMETER_ISSHAPER))
             {
-                var shaperCommand = new ShaperItemFilter {isShaper = command[0] != SYMBOL_NOT};
+                var shaperCommand = new ShaperItemFilter { isShaper = command[0] != SYMBOL_NOT };
                 newFilter.Filters.Add(shaperCommand);
                 return true;
             }
 
             if (command.Contains(PARAMETER_ISCRUSADER))
             {
-                var crusaderCommand = new CrusaderItemFilter {isCrusader = command[0] != SYMBOL_NOT};
+                var crusaderCommand = new CrusaderItemFilter { isCrusader = command[0] != SYMBOL_NOT };
                 newFilter.Filters.Add(crusaderCommand);
                 return true;
             }
 
             if (command.Contains(PARAMETER_ISHUNTER))
             {
-                var hunterCommand = new HunterItemFilter {isHunter = command[0] != SYMBOL_NOT};
+                var hunterCommand = new HunterItemFilter { isHunter = command[0] != SYMBOL_NOT };
                 newFilter.Filters.Add(hunterCommand);
                 return true;
             }
 
             if (command.Contains(PARAMETER_ISREDEEMER))
             {
-                var redeemerCommand = new RedeemerItemFilter {isRedeemer = command[0] != SYMBOL_NOT};
+                var redeemerCommand = new RedeemerItemFilter { isRedeemer = command[0] != SYMBOL_NOT };
                 newFilter.Filters.Add(redeemerCommand);
                 return true;
             }
 
             if (command.Contains(PARAMETER_ISWARLORD))
             {
-                var warordCommand = new WarlordItemFilter {isWarlord = command[0] != SYMBOL_NOT};
+                var warordCommand = new WarlordItemFilter { isWarlord = command[0] != SYMBOL_NOT };
                 newFilter.Filters.Add(warordCommand);
                 return true;
             }
 
             if (command.Contains(PARAMETER_ISINFLUENCED))
             {
-                var influencedCommand = new AnyInfluenceItemFilter {isInfluenced = command[0] != SYMBOL_NOT};
+                var influencedCommand = new AnyInfluenceItemFilter { isInfluenced = command[0] != SYMBOL_NOT };
                 newFilter.Filters.Add(influencedCommand);
                 return true;
             }
 
             if (command.Contains(PARAMETER_ISBLIGHTEDMAP))
             {
-                var blightedMapCommand = new BlightedMapFilter {isBlightMap = command[0] != SYMBOL_NOT};
+                var blightedMapCommand = new BlightedMapFilter { isBlightMap = command[0] != SYMBOL_NOT };
                 newFilter.Filters.Add(blightedMapCommand);
                 return true;
             }
@@ -250,22 +252,26 @@ namespace Stashie
             if (command.Contains(PARAMETER_ISELDERGUARDIANMAP))
             {
                 var elderGuardianMapCommand = new ElderGuardianMapFilter
-                    {isElderGuardianMap = command[0] != SYMBOL_NOT};
+                { isElderGuardianMap = command[0] != SYMBOL_NOT };
                 newFilter.Filters.Add(elderGuardianMapCommand);
                 return true;
             }
 
             string parameter;
             string operation;
+            string stringValue;
             string value;
+            string affixValueIndex;
 
-            if (!ParseCommand(command, out parameter, out operation, out value))
+            if (!ParseCommand(command, out parameter, out operation, out stringValue, out value, out affixValueIndex))
             {
                 DebugWindow.LogMsg($"Unknown operation: {command}", 5, Color.Red);
                 return false;
             }
 
-            var stringComp = new FilterParameterCompare {CompareString = value};
+            var stringComp = new FilterParameterCompare { CompareString = value };
+
+
 
             switch (parameter.ToLower())
             {
@@ -312,6 +318,12 @@ namespace Stashie
                     stringComp.CompareInt = int.Parse(value);
                     stringComp.StringParameter = data => data.LargestLinkSize.ToString();
                     break;
+                case PARAMETER_MODAFFIX:
+                    stringComp.CompareAffixModIndex = int.Parse(affixValueIndex);
+                    stringComp.ModsParameter = data => data.ItemMods;
+                    stringComp.CompareAffixValue = int.Parse(value);
+                    stringComp.CompareAffixString = stringValue;
+                    break;
                 case PARAMETER_VEILED:
                     stringComp.IntParameter = data => data.Veiled;
                     stringComp.CompareInt = int.Parse(value);
@@ -337,124 +349,217 @@ namespace Stashie
                     stringComp.CompareInt = int.Parse(value);
                     stringComp.StringParameter = data => data.SkillGemLevel.ToString();
                     break;
-                //case PARAMETER_METAMORPHREWARDSAMOUNT:
-                //    stringComp.IntParameter = data => data.MetamorphSampleRewardsAmount;
-                //    stringComp.CompareInt = int.Parse(value);
-                //    stringComp.StringParameter = data => data.MetamorphSampleRewardsAmount.ToString();
-                //    break;
-                //case PARAMETER_METAMORPHGOODREWARDSAMOUNT:
-                //    stringComp.IntParameter = data => data.MetamorphSampleGoodRewardsAmount;
-                //    stringComp.CompareInt = int.Parse(value);
-                //    stringComp.StringParameter = data => data.MetamorphSampleGoodRewardsAmount.ToString();
-                //    break;
-                //case PARAMETER_METAMORPHBADREWARDSAMOUNT:
-                //    stringComp.IntParameter = data => data.MetamorphSampleBadRewardsAmount;
-                //    stringComp.CompareInt = int.Parse(value);
-                //    stringComp.StringParameter = data => data.MetamorphSampleBadRewardsAmount.ToString();
-                //    break;
 
                 default:
                     DebugWindow.LogMsg($"Filter parser: Parameter is not defined in code: {parameter}", 10);
                     return false;
             }
 
-            switch (operation.ToLower())
+            if (parameter.ToLower() != PARAMETER_MODAFFIX)
             {
-                case OPERATION_EQUALITY:
-                    stringComp.CompDeleg = data => stringComp.StringParameter(data).Equals(stringComp.CompareString);
-                    break;
-                case OPERATION_NONEQUALITY:
-                    stringComp.CompDeleg = data => !stringComp.StringParameter(data).Equals(stringComp.CompareString);
-                    break;
-                case OPERATION_CONTAINS:
-                    stringComp.CompDeleg = data => stringComp.StringParameter(data).Contains(stringComp.CompareString);
-                    break;
-                case OPERATION_NOTCONTAINS:
-                    stringComp.CompDeleg = data => !stringComp.StringParameter(data).Contains(stringComp.CompareString);
-                    break;
+                switch (operation.ToLower())
+                {
+                    case OPERATION_EQUALITY:
+                        stringComp.CompDeleg = data => stringComp.StringParameter(data).Equals(stringComp.CompareString);
+                        break;
+                    case OPERATION_NONEQUALITY:
+                        stringComp.CompDeleg = data => !stringComp.StringParameter(data).Equals(stringComp.CompareString);
+                        break;
+                    case OPERATION_CONTAINS:
+                        stringComp.CompDeleg = data => stringComp.StringParameter(data).Contains(stringComp.CompareString);
+                        break;
+                    case OPERATION_NOTCONTAINS:
+                        stringComp.CompDeleg = data => !stringComp.StringParameter(data).Contains(stringComp.CompareString);
+                        break;
 
-                case OPERATION_BIGGER:
-                    if (stringComp.IntParameter == null)
-                    {
-                        DebugWindow.LogMsg(
-                            $"Filter parser error: Can't compare string parameter with {OPERATION_BIGGER} (numerical) operation. Statement: {command}",
-                            10);
+                    case OPERATION_BIGGER:
+                        if (stringComp.IntParameter == null)
+                        {
+                            DebugWindow.LogMsg(
+                                $"Filter parser error: Can't compare string parameter with {OPERATION_BIGGER} (numerical) operation. Statement: {command}",
+                                10);
 
+                            return false;
+                        }
+
+                        stringComp.CompDeleg = data => stringComp.IntParameter(data) > stringComp.CompareInt;
+                        break;
+                    case OPERATION_LESS:
+                        if (stringComp.IntParameter == null)
+                        {
+                            DebugWindow.LogMsg(
+                                $"Filter parser error: Can't compare string parameter with {OPERATION_LESS} (numerical) operation. Statement: {command}",
+                                10);
+
+                            return false;
+                        }
+
+                        stringComp.CompDeleg = data =>
+                        {
+                            return stringComp.IntParameter(data) < stringComp.CompareInt;
+                        };
+                        break;
+                    case OPERATION_LESSEQUAL:
+                        if (stringComp.IntParameter == null)
+                        {
+                            DebugWindow.LogMsg(
+                                $"Filter parser error: Can't compare string parameter with {OPERATION_LESSEQUAL} (numerical) operation. Statement: {command}",
+                                10);
+
+                            return false;
+                        }
+
+                        stringComp.CompDeleg = data => stringComp.IntParameter(data) <= stringComp.CompareInt;
+                        break;
+
+                    case OPERATION_BIGGERQUAL:
+                        if (stringComp.IntParameter == null)
+                        {
+                            DebugWindow.LogMsg(
+                                $"Filter parser error: Can't compare string parameter with {OPERATION_BIGGERQUAL} (numerical) operation. Statement: {command}",
+                                10);
+
+                            return false;
+                        }
+
+                        stringComp.CompDeleg = data => stringComp.IntParameter(data) >= stringComp.CompareInt;
+                        break;
+
+                    default:
+                        DebugWindow.LogMsg($"Filter parser: Operation is not defined in code: {operation}", 10);
                         return false;
-                    }
-
-                    stringComp.CompDeleg = data => stringComp.IntParameter(data) > stringComp.CompareInt;
-                    break;
-                case OPERATION_LESS:
-                    if (stringComp.IntParameter == null)
-                    {
-                        DebugWindow.LogMsg(
-                            $"Filter parser error: Can't compare string parameter with {OPERATION_LESS} (numerical) operation. Statement: {command}",
-                            10);
-
-                        return false;
-                    }
-
-                    stringComp.CompDeleg = data => stringComp.IntParameter(data) < stringComp.CompareInt;
-                    break;
-                case OPERATION_LESSEQUAL:
-                    if (stringComp.IntParameter == null)
-                    {
-                        DebugWindow.LogMsg(
-                            $"Filter parser error: Can't compare string parameter with {OPERATION_LESSEQUAL} (numerical) operation. Statement: {command}",
-                            10);
-
-                        return false;
-                    }
-
-                    stringComp.CompDeleg = data => stringComp.IntParameter(data) <= stringComp.CompareInt;
-                    break;
-
-                case OPERATION_BIGGERQUAL:
-                    if (stringComp.IntParameter == null)
-                    {
-                        DebugWindow.LogMsg(
-                            $"Filter parser error: Can't compare string parameter with {OPERATION_BIGGERQUAL} (numerical) operation. Statement: {command}",
-                            10);
-
-                        return false;
-                    }
-
-                    stringComp.CompDeleg = data => stringComp.IntParameter(data) >= stringComp.CompareInt;
-                    break;
-
-                default:
-                    DebugWindow.LogMsg($"Filter parser: Operation is not defined in code: {operation}", 10);
-                    return false;
+                }
             }
-
+            else
+            {
+                switch (operation.ToLower())
+                {
+                    case OPERATION_EQUALITY:
+                        if (stringComp.ModsParameter == null)
+                        {
+                            return false;
+                        }
+                        stringComp.CompDeleg = data => stringComp.ModsParameter(data).Any(itemMod => itemMod.Name.ToLower().Contains(stringComp.CompareAffixString.ToLower())
+                                                                                                           && itemMod.Values != null
+                                                                                                           && itemMod.Values.Count > stringComp.CompareAffixModIndex
+                                                                                                           && itemMod.Values[stringComp.CompareAffixModIndex] == stringComp.CompareAffixValue);
+                        break;
+                    case OPERATION_NONEQUALITY:
+                        if (stringComp.ModsParameter == null)
+                        {
+                            return false;
+                        }
+                        stringComp.CompDeleg = data => stringComp.ModsParameter(data).Any(itemMod => itemMod.Name.ToLower().Contains(stringComp.CompareAffixString.ToLower())
+                                                                                                           && itemMod.Values != null
+                                                                                                           && itemMod.Values.Count > stringComp.CompareAffixModIndex
+                                                                                                           && itemMod.Values[stringComp.CompareAffixModIndex] != stringComp.CompareAffixValue);
+                        break;
+                    case OPERATION_BIGGER:
+                        if (stringComp.ModsParameter == null)
+                        {
+                            return false;
+                        }
+                        stringComp.CompDeleg = data => stringComp.ModsParameter(data).Any(itemMod => itemMod.Name.ToLower().Contains(stringComp.CompareAffixString.ToLower())
+                                                                                                           && itemMod.Values != null
+                                                                                                           && itemMod.Values.Count > stringComp.CompareAffixModIndex
+                                                                                                           && itemMod.Values[stringComp.CompareAffixModIndex] > stringComp.CompareAffixValue);
+                        break;
+                    case OPERATION_LESS:
+                        if (stringComp.ModsParameter == null)
+                        {
+                            return false;
+                        }
+                        stringComp.CompDeleg = data => stringComp.ModsParameter(data).Any(itemMod => itemMod.Name.ToLower().Contains(stringComp.CompareAffixString.ToLower())
+                                                                                                           && itemMod.Values != null
+                                                                                                           && itemMod.Values.Count > stringComp.CompareAffixModIndex
+                                                                                                           && itemMod.Values[stringComp.CompareAffixModIndex] < stringComp.CompareAffixValue);
+                        break;
+                    case OPERATION_LESSEQUAL:
+                        if (stringComp.ModsParameter == null)
+                        {
+                            return false;
+                        }
+                        stringComp.CompDeleg = data => stringComp.ModsParameter(data).Any(itemMod => itemMod.Name.ToLower().Contains(stringComp.CompareAffixString.ToLower())
+                                                                                                           && itemMod.Values != null
+                                                                                                           && itemMod.Values.Count > stringComp.CompareAffixModIndex
+                                                                                                           && itemMod.Values[stringComp.CompareAffixModIndex] <= stringComp.CompareAffixValue);
+                        break;
+                    case OPERATION_BIGGERQUAL:
+                        if (stringComp.ModsParameter == null)
+                        {
+                            return false;
+                        }
+                        stringComp.CompDeleg = data => stringComp.ModsParameter(data).Any(itemMod => itemMod.Name.ToLower().Contains(stringComp.CompareAffixString.ToLower())
+                                                                                                           && itemMod.Values != null
+                                                                                                           && itemMod.Values.Count > stringComp.CompareAffixModIndex
+                                                                                                           && itemMod.Values[stringComp.CompareAffixModIndex] >= stringComp.CompareAffixValue);
+                        break;
+                    default:
+                        DebugWindow.LogMsg($"Filter parser: Operation is not defined in code: {operation}", 10);
+                        return false;
+                }
+            }
             newFilter.Filters.Add(stringComp);
             return true;
         }
 
-        private static bool ParseCommand(string command, out string parameter, out string operation, out string value)
+        private static bool ParseCommand(string command, out string parameter, out string operation, out string stringValue, out string value, out string affixValueIndex)
         {
             parameter = "";
             operation = "";
+            stringValue = "";
             value = "";
+            affixValueIndex = "0";
 
-            var operationIndex = -1;
+            var regex = new Regex(@"(?=.*affix(?:\[\d+\])?=)affix(?:\[(\d+)\])?=", RegexOptions.IgnoreCase);
 
-            foreach (var t in Operations)
+            if (regex.IsMatch(command))
             {
-                operationIndex = command.IndexOf(t, StringComparison.Ordinal);
+                var match = regex.Match(command);
+                if (match.Groups[1].Success)
+                {
+                    affixValueIndex = match.Groups[1].Value;
+                }
 
-                if (operationIndex == -1) continue;
+                command = regex.Replace(command, "");
 
-                operation = t;
-                break;
+                var operationIndex = -1;
+
+                foreach (var t in Operations)
+                {
+                    operationIndex = command.IndexOf(t, StringComparison.Ordinal);
+
+                    if (operationIndex == -1) continue;
+
+                    operation = t;
+                    break;
+                }
+
+                if (operationIndex == -1) return false;
+
+                parameter = PARAMETER_MODAFFIX;
+                stringValue = command.Substring(0, operationIndex).Trim();
+                value = command.Substring(operationIndex + operation.Length).Trim();
             }
+            else
+            {
+                var operationIndex = -1;
 
-            if (operationIndex == -1) return false;
+                foreach (var t in Operations)
+                {
+                    operationIndex = command.IndexOf(t, StringComparison.Ordinal);
 
-            parameter = command.Substring(0, operationIndex).Trim();
+                    if (operationIndex == -1) continue;
 
-            value = command.Substring(operationIndex + operation.Length).Trim();
+                    operation = t;
+                    break;
+                }
+
+                if (operationIndex == -1) return false;
+
+                parameter = command.Substring(0, operationIndex).Trim();
+                value = command.Substring(operationIndex + operation.Length).Trim();
+            }
             return true;
         }
     }

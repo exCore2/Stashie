@@ -12,18 +12,18 @@
     <DebugType>embedded</DebugType>
     <PathMap>$(MSBuildProjectDirectory)=$(MSBuildProjectName)</PathMap>
     <EmbedAllSources>true</EmbedAllSources>
-    <OutputPath>..\..\..\..\..\PoeHelper\Plugins\Compiled\Stashie\</OutputPath>
+    <OutputPath>..\..\..\..\PoeHelper\Plugins\Compiled\Stashie\</OutputPath>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="ExileCore">
-      <HintPath>..\..\..\..\..\PoeHelper\ExileCore.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="ImGui.NET" Version="1.88.0" />
     <PackageReference Include="SharpDX.Mathematics" Version="4.2.0" />
     <PackageReference Include="LinqFaster" Version="1.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="ExileCore">
+      <HintPath>..\..\..\ExileCore.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>

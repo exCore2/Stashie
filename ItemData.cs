@@ -1,5 +1,6 @@
 ﻿using ExileCore.PoEMemory.Components;
 using ExileCore.PoEMemory.Elements.InventoryElements;
+using ExileCore.PoEMemory.MemoryObjects;
 using ExileCore.PoEMemory.Models;
 using ExileCore.Shared.Enums;
 using ExileCore.Shared.Helpers;
@@ -15,6 +16,13 @@ namespace Stashie
 {
     public class ItemData
     {
+        private const string ClassNameHeistContract = "HeistContract";
+        private const string ModNameVeil = "Veil";
+        private const string ModNameEnchantment = "Enchantment";
+        private const string ModNameInfectedMap = "InfectedMap";
+        private const string ModNameAfflictionMapReward = "AfflictionMapReward";
+        private const string ModNameMapElderContainsBoss = "MapElderContainsBoss";
+
         public string Path { get; }
         public string ClassName { get; }
         public string BaseName { get; }
@@ -52,78 +60,86 @@ namespace Stashie
         public int SkillGemLevel { get; }
         public int SkillGemQualityType { get; }
         public List<string> ModsNames { get; }
+        public List<ItemMod> ItemMods { get; }
         public uint InventoryID { get; }
         public Vector2 clientRect { get; }
 
         public ItemData(InventSlotItem inventoryItem, BaseItemType baseItemType, Vector2 clickPos)
         {
+            if (inventoryItem.Item == null) return;
 
+            // Component Declarations
             var item = inventoryItem.Item;
-            InventoryID = inventoryItem.Item.InventoryId;
+            item.TryGetComponent<Map>(out var mapComp);
+            item.TryGetComponent<Base>(out var baseComp);
+            item.TryGetComponent<Mods>(out var modsComp);
+            item.TryGetComponent<Sockets>(out var socketsComp);
+            item.TryGetComponent<Quality>(out var qualityComp);
+            item.TryGetComponent<SkillGem>(out var skillGemComp);
+            item.TryGetComponent<HeistContract>(out var heistComp);
 
+
+            // Processing Components
             Path = item.Path;
-            var baseComponent = item.GetComponent<Base>();
-            if (baseComponent == null) return;
-            isElder = baseComponent.isElder;
-            isShaper = baseComponent.isShaper;
-            isCorrupted = baseComponent.isCorrupted;
-            isCrusader = baseComponent.isCrusader;
-            isRedeemer = baseComponent.isRedeemer;
-            isWarlord = baseComponent.isWarlord;
-            isHunter = baseComponent.isHunter;
+            InventoryID = item.InventoryId;
+            ScourgeTier = baseComp?.ScourgedTier ?? 0;
+            isElder = baseComp?.isElder ?? false;
+            isShaper = baseComp?.isShaper ?? false;
+            isHunter = baseComp?.isHunter ?? false;
+            isWarlord = baseComp?.isWarlord ?? false;
+            isCrusader = baseComp?.isCrusader ?? false;
+            isRedeemer = baseComp?.isRedeemer ?? false;
+            isCorrupted = baseComp?.isCorrupted ?? false;
             isInfluenced = isCrusader || isRedeemer || isWarlord || isHunter || isShaper || isElder;
-            ScourgeTier = baseComponent.ScourgedTier;
-            if(baseItemType.ClassName == "HeistContract")
+
+            // Processing Heist Contract
+            if (baseItemType.ClassName == ClassNameHeistContract)
             {
-                var heistComp = item.GetComponent<HeistContract>();
-                HeistContractJobType = heistComp.RequiredJob.Name ?? "";
+                HeistContractJobType = heistComp?.RequiredJob?.Name ?? "";
                 HeistContractReqJobLevel = heistComp?.RequiredJobLevel ?? 0;
             }
 
-            var mods = item.GetComponent<Mods>();
-            Rarity = mods?.ItemRarity ?? ItemRarity.Normal;
-            BIdentified = mods?.Identified ?? true;
-            ItemLevel = mods?.ItemLevel ?? 0;
-            Veiled = mods?.ItemMods.Where(m => m.DisplayName.Contains("Veil")).Count() ?? 0;
-            Fractured = mods?.CountFractured ?? 0;
-            SkillGemLevel = item.GetComponent<SkillGem>()?.Level ?? 0;
-            //SkillGemQualityType = (int)item.GetComponent<SkillGem>()?.QualityType;
-            Synthesised = mods?.Synthesised ?? false;
-            isBlightMap = mods?.ItemMods.Where(m => m.Name.Contains("InfectedMap")).Count() > 0;
-            isElderGuardianMap = mods?.ItemMods.Where(m => m.Name.Contains("MapElderContainsBoss")).Count() > 0;
-            Enchanted = mods?.ItemMods.Where(m => m.Name.Contains("Enchantment")).Count() > 0;
-            DeliriumStacks = mods?.ItemMods.Where(m => m.Name.Contains("AfflictionMapReward")).Count() ?? 0;
-            ModsNames = mods?.ItemMods.Select(mod => mod.Name).ToList();
+            // Processing Mods
+            ItemMods = modsComp?.ItemMods;
+            Name = modsComp?.UniqueName ?? Name;
+            ItemLevel = modsComp?.ItemLevel ?? 0;
+            Fractured = modsComp?.CountFractured ?? 0;
+            BIdentified = modsComp?.Identified ?? true;
+            Synthesised = modsComp?.Synthesised ?? false;
+            Enchanted = modsComp?.EnchantedMods?.Count > 0;
+            Rarity = modsComp?.ItemRarity ?? ItemRarity.Normal;
+            ModsNames = modsComp?.ItemMods?.Select(mod => mod.Name).ToList();
+            Veiled = modsComp?.ItemMods?.Count(m => m.DisplayName.Contains(ModNameVeil)) ?? 0;
+            isBlightMap = modsComp?.ItemMods?.Count(m => m.Name.Contains(ModNameInfectedMap)) > 0;
+            DeliriumStacks = modsComp?.ItemMods?.Count(m => m.Name.Contains(ModNameAfflictionMapReward)) ?? 0;
+            isElderGuardianMap = modsComp?.ItemMods?.Count(m => m.Name.Contains(ModNameMapElderContainsBoss)) > 0;
 
-            NumberOfSockets = item.GetComponent<Sockets>()?.NumberOfSockets ?? 0;
-            LargestLinkSize = item.GetComponent<Sockets>()?.LargestLinkSize ?? 0;
+            // Processing Skill Gem
+            SkillGemLevel = skillGemComp?.Level ?? 0;
 
-            ItemQuality = item.GetComponent<Quality>()?.ItemQuality ?? 0;
-            ClassName = baseItemType.ClassName;
-            BaseName = baseItemType.BaseName;
+            // Processing Sockets
+            NumberOfSockets = socketsComp?.NumberOfSockets ?? 0;
+            LargestLinkSize = socketsComp?.LargestLinkSize ?? 0;
 
-            Name = baseComponent?.Name ?? "";
+            // Processing Quality
+            ItemQuality = qualityComp?.ItemQuality ?? 0;
+
+            // Other Assignments
             Description = "";
-            MapTier = item.GetComponent<Map>()?.Tier ?? 0;
+            Name = baseComp?.Name ?? "";
+            BaseName = baseItemType.BaseName;
+            ClassName = baseItemType.ClassName;
 
+            // Processing Map
+            MapTier = mapComp?.Tier ?? 0;
+
+            // Final Assignment
             clientRect = clickPos;
-
-            Name = mods?.UniqueName ?? Name;           
         }
-        
+
         public Vector2 GetClickPosCache()
         {
             return clientRect;
         }
-        /*
-        [Obsolete]
-        public Vector2 GetClickPos()
-        {
-            var paddingPixels = 3;
-            var clientRect = InventoryItem.GetClientRect();
-            var x = MathHepler.Randomizer.Next((int) clientRect.TopLeft.X + paddingPixels, (int) clientRect.TopRight.X - paddingPixels);
-            var y = MathHepler.Randomizer.Next((int) clientRect.TopLeft.Y + paddingPixels, (int) clientRect.BottomLeft.Y - paddingPixels);
-            return new Vector2(x, y);
-        }*/
     }
 }
