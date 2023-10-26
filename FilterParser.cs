@@ -439,7 +439,7 @@ namespace Stashie
                         {
                             return false;
                         }
-                        stringComp.CompDeleg = data => stringComp.ModsParameter(data).Any(itemMod => itemMod.Name.ToLower() == stringComp.CompareAffixString.ToLower()
+                        stringComp.CompDeleg = data => stringComp.ModsParameter(data).Any(itemMod => itemMod.Name.ToLower().Contains(stringComp.CompareAffixString.ToLower())
                                                                                                            && itemMod.Values != null
                                                                                                            && itemMod.Values.Count > stringComp.CompareAffixModIndex
                                                                                                            && itemMod.Values[stringComp.CompareAffixModIndex] == stringComp.CompareAffixValue);
@@ -449,7 +449,7 @@ namespace Stashie
                         {
                             return false;
                         }
-                        stringComp.CompDeleg = data => stringComp.ModsParameter(data).Any(itemMod => itemMod.Name.ToLower() == stringComp.CompareAffixString.ToLower()
+                        stringComp.CompDeleg = data => stringComp.ModsParameter(data).Any(itemMod => itemMod.Name.ToLower().Contains(stringComp.CompareAffixString.ToLower())
                                                                                                            && itemMod.Values != null
                                                                                                            && itemMod.Values.Count > stringComp.CompareAffixModIndex
                                                                                                            && itemMod.Values[stringComp.CompareAffixModIndex] != stringComp.CompareAffixValue);
@@ -459,7 +459,7 @@ namespace Stashie
                         {
                             return false;
                         }
-                        stringComp.CompDeleg = data => stringComp.ModsParameter(data).Any(itemMod => itemMod.Name.ToLower() == stringComp.CompareAffixString.ToLower()
+                        stringComp.CompDeleg = data => stringComp.ModsParameter(data).Any(itemMod => itemMod.Name.ToLower().Contains(stringComp.CompareAffixString.ToLower())
                                                                                                            && itemMod.Values != null
                                                                                                            && itemMod.Values.Count > stringComp.CompareAffixModIndex
                                                                                                            && itemMod.Values[stringComp.CompareAffixModIndex] > stringComp.CompareAffixValue);
@@ -469,7 +469,7 @@ namespace Stashie
                         {
                             return false;
                         }
-                        stringComp.CompDeleg = data => stringComp.ModsParameter(data).Any(itemMod => itemMod.Name.ToLower() == stringComp.CompareAffixString.ToLower()
+                        stringComp.CompDeleg = data => stringComp.ModsParameter(data).Any(itemMod => itemMod.Name.ToLower().Contains(stringComp.CompareAffixString.ToLower())
                                                                                                            && itemMod.Values != null
                                                                                                            && itemMod.Values.Count > stringComp.CompareAffixModIndex
                                                                                                            && itemMod.Values[stringComp.CompareAffixModIndex] < stringComp.CompareAffixValue);
@@ -479,7 +479,7 @@ namespace Stashie
                         {
                             return false;
                         }
-                        stringComp.CompDeleg = data => stringComp.ModsParameter(data).Any(itemMod => itemMod.Name.ToLower() == stringComp.CompareAffixString.ToLower()
+                        stringComp.CompDeleg = data => stringComp.ModsParameter(data).Any(itemMod => itemMod.Name.ToLower().Contains(stringComp.CompareAffixString.ToLower())
                                                                                                            && itemMod.Values != null
                                                                                                            && itemMod.Values.Count > stringComp.CompareAffixModIndex
                                                                                                            && itemMod.Values[stringComp.CompareAffixModIndex] <= stringComp.CompareAffixValue);
@@ -489,7 +489,7 @@ namespace Stashie
                         {
                             return false;
                         }
-                        stringComp.CompDeleg = data => stringComp.ModsParameter(data).Any(itemMod => itemMod.Name.ToLower() == stringComp.CompareAffixString.ToLower()
+                        stringComp.CompDeleg = data => stringComp.ModsParameter(data).Any(itemMod => itemMod.Name.ToLower().Contains(stringComp.CompareAffixString.ToLower())
                                                                                                            && itemMod.Values != null
                                                                                                            && itemMod.Values.Count > stringComp.CompareAffixModIndex
                                                                                                            && itemMod.Values[stringComp.CompareAffixModIndex] >= stringComp.CompareAffixValue);
