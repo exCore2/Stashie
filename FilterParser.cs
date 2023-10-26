@@ -520,11 +520,8 @@ namespace Stashie
                 {
                     affixValueIndex = match.Groups[1].Value;
                 }
-                DebugWindow.LogMsg(command);
 
                 command = regex.Replace(command, "");
-
-                DebugWindow.LogMsg(command);
 
                 var operationIndex = -1;
 
