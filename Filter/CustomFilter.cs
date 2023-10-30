@@ -10,5 +10,7 @@ namespace Stashie
         public ItemFilterData Query { get; set; }
         public int Index { get; set; }
         public bool AllowProcess => StashIndexNode.Index != -1;
+        public bool Shifting { get; set; }
+        public bool Affinity { get; set; }
     }
 }

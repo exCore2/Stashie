@@ -7,7 +7,6 @@ using System.Linq;
 using System.Windows.Forms;
 using ExileCore;
 using ExileCore.PoEMemory.Components;
-using ExileCore.PoEMemory.Elements.InventoryElements;
 using ExileCore.PoEMemory.MemoryObjects;
 using ExileCore.Shared;
 using ExileCore.Shared.Enums;
@@ -44,11 +43,10 @@ namespace Stashie
         private const int MaxShownSidebarStashTabs = 31;
         private int _stashCount;
         private bool secondaryFilterActive = false;
-        private ItemFilter _itemFilter;
 
         public StashieCore()
         {
-            Name = "Stashie";
+            Name = "StashieWithLinq";
         }
 
         public override void ReceiveEvent(string eventId, object args)
@@ -183,94 +181,26 @@ namespace Stashie
 
             const string filtersConfig =
 
-                #region default config String
+            #region default config String
 
-                "//FilterName(menu name):\tfilters\t\t:ParentMenu(optionally, will be created automatically for grouping)\r\n" +
-                "//Filter parts should divided by coma or | (for OR operation(any filter part can pass))\r\n" +
+                "// Rule Structure:\r\n" +
+                "// FilterName::Filter::Shifting::Affinity::ParentMenu\r\n" +
                 "\r\n" +
-                "////////////\tAvailable properties:\t/////////////////////\r\n" +
-                "/////////\tString (name) properties:\r\n" +
-                "//classname\r\n" +
-                "//basename\r\n" +
-                "//path\r\n" +
-                "/////////\tNumerical properties:\r\n" +
-                "//itemquality\r\n" +
-                "//rarity\r\n" +
-                "//ilvl\r\n" +
-                "//tier\r\n" +
-                "//numberofsockets\r\n" +
-                "//numberoflinks\r\n" +
-                "//veiled\r\n" +
-                "//fractured\r\n" +
-                "/////////\tBoolean properties:\r\n" +
-                "//identified\r\n" +
-                "//fractured\r\n" +
-                "//corrupted\r\n" +
-                "//influenced\r\n" +
-                "//Elder\r\n" +
-                "//Shaper\r\n" +
-                "//Crusader\r\n" +
-                "//Hunter\r\n" +
-                "//Redeemer\r\n" +
-                "//Warlord\r\n" +
-                "//blightedMap\r\n" +
-                "//elderGuardianMap\r\n" +
-                "/////////////////////////////////////////////////////////////\r\n" +
-                "////////////\tAvailable operations:\t/////////////////////\r\n" +
-                "/////////\tString (name) operations:\r\n" +
-                "//!=\t(not equal)\r\n" +
-                "//=\t\t(equal)\r\n" +
-                "//^\t\t(contains)\r\n" +
-                "//!^\t(not contains)\r\n" +
-                "/////////\tNumerical operations:\r\n" +
-                "//!=\t(not equal)\r\n" +
-                "//=\t\t(equal)\r\n" +
-                "//>\t\t(bigger)\r\n" +
-                "//<\t\t(less)\r\n" +
-                "//<=\t(less or equal)\r\n" +
-                "//>=\t(greater or equal)\r\n" +
-                "/////////\tBoolean operations:\r\n" +
-                "//!\t\t(not/invert)\r\n" +
-                "/////////////////////////////////////////////////////////////\r\n" +
+                "// Example Usage:\r\n" +
+                "// [o] 6 Links::SocketInfo.LargestLinkSize == 6::true::false::Overwrites\r\n" +
                 "\r\n" +
-                "//Default Tabs\r\n" +
-                "Currency:\t\t\tClassName=StackableCurrency,path!^Essence,BaseName!^Remnant,path!^CurrencyDelveCrafting,BaseName!^Splinter,Path!^CurrencyItemisedProphecy,Path!^CurrencyAfflictionOrb,Path!^Mushrune\t:Default Tabs\r\n" +
-                "Divination Cards:\t\t\tClassName=DivinationCard\t\t\t\t\t:Default Tabs\r\n" +
-                "Essences:\t\t\tBaseName^Essence|BaseName^Remnant,ClassName=StackableCurrency:Default Tabs\r\n" +
-                "Fragments:\t\t\tClassName=MapFragment|BaseName^Splinter,ClassName=StackableCurrency|ClassName=LabyrinthMapItem|BaseName^Scarab\t:Default Tabs\r\n" +
-                "Maps:\t\t\tClassName=Map,!blightedMap\t\t\t:Default Tabs\r\n" +
-                "Fossils/Resonators:\t\t\tpath^CurrencyDelveCrafting | path^DelveStackableSocketableCurrency\t:Default Tabs" +
-                "Gems:\t\t\t\tClassName^Skill Gem,ItemQuality=0\t\t\t:Default Tabs\r\n" +
-                "6-Socket:\t\t\tnumberofsockets=6,numberoflinks!=6\t\t\t:Default Tabs\r\n" +
-                "Prophecies:\t\t\tPath^CurrencyItemisedProphecy\t\t\t:Default Tabs\r\n" +
-                "Jewels:\t\t\t\tClassName=Jewel,Rarity != Unique\t\t\t\t\t\t\t\t:Default Tabs\r\n" +
+                "// Explanation:\r\n" +
+                "// - FilterName: The name of the filter or menu.\r\n" +
+                "// - Filter: The filter condition or rule.\r\n" +
+                "// - Shifting: Presses the Shift key during stash operations (Ctrl + Shift).\r\n" +
+                "// - Affinity: Clicks items without switching the tab.\r\n" +
+                "// - ParentMenu: Groups all together with the same ParentMenu in the plugin settings\r\n" +
                 "\r\n" +
-                "//Special Items\r\n" +
-                "Veiled:\t\t\tVeiled>0\t:Special items\r\n" +
-                "AnyInfluence:\t\t\tinfluenced\t:Special items\r\n" +
+                "// - This uses the Item Filter Library from https://github.com/exApiTools/ItemFilter/blob/main/README.md\r\n" +
                 "\r\n" +
-                "//league Content\r\n" +
-                "Legion-Incubators:\t\t\tpath^CurrencyIncubation\t:League Items\r\n" +
-                "Delirium-Splinter:\t\t\tpath^CurrencyAfflictionShard\t:League Items\r\n" +
-                "Delirium-Simulacrum:\t\t\tpath^CurrencyAfflictionFragment\t:League Items\r\n" +
-                "Blight-AnnointOils:\t\t\tpath^Mushrune\t:League Items\r\n" +
-                "//Chance Items\r\n" +
-                "Sorcerer Boots:\tBaseName=Sorcerer Boots,Rarity=Normal\t:Chance Items\r\n" +
-                "Leather Belt:\tBaseName=Leather Belt,Rarity=Normal\t\t:Chance Items\r\n" +
-                "\r\n" +
-                "//Vendor Recipes\r\n" +
-                "Chisel Recipe:\t\tBaseName=Stone Hammer|BaseName=Rock Breaker,ItemQuality=20\t:Vendor Recipes\r\n" +
-                "Quality Gems:\t\tClassName^Skill Gem,ItemQuality>0\t\t\t\t\t\t\t:Vendor Recipes\r\n" +
-                "Quality Flasks:\t\tClassName^Flask,ItemQuality>0\t\t\t\t\t\t\t\t:Vendor Recipes\r\n" +
-                "\r\n" +
-                "//Chaos Recipe LVL 2 (unindentified and ilvl 60 or above)\r\n" +
-                "Weapons:\t\t!identified,Rarity=Rare,ilvl>=60,ClassName^Two Hand|ClassName^One Hand|ClassName=Bow|ClassName=Staff|ClassName=Sceptre|ClassName=Wand|ClassName=Dagger|ClassName=Claw|ClassName=Shield :Chaos Recipe\r\n" +
-                "Jewelry:\t\t!identified,Rarity=Rare,ilvl>=60,ClassName=Ring|ClassName=Amulet \t:Chaos Recipe\r\n" +
-                "Belts:\t\t\t!identified,Rarity=Rare,ilvl>=60,ClassName=Belt \t\t\t\t\t:Chaos Recipe\r\n" +
-                "Helms:\t\t\t!identified,Rarity=Rare,ilvl>=60,ClassName=Helmet \t\t\t\t\t:Chaos Recipe\r\n" +
-                "Body Armours:\t!identified,Rarity=Rare,ilvl>=60,ClassName=Body Armour \t\t\t\t:Chaos Recipe\r\n" +
-                "Boots:\t\t\t!identified,Rarity=Rare,ilvl>=60,ClassName=Boots \t\t\t\t\t:Chaos Recipe\r\n" +
-                "Gloves:\t\t\t!identified,Rarity=Rare,ilvl>=60,ClassName=Gloves \t\t\t\t\t:Chaos Recipe";
+                "//Overwrites\r\n" +
+                "[o] 6 Links::SocketInfo.LargestLinkSize == 6::false::false::Overwrites\r\n" +
+                "[o] Rares::Rarity == ItemRarity.Rare::false::false::Overwrites";
 
             #endregion
 
@@ -576,26 +506,6 @@ namespace Stashie
         {
             return GameController.Game.IngameState.IngameUi.InventoryPanel.IsVisible &&
                     GameController.Game.IngameState.IngameUi.StashElement.IsVisibleLocal;
-        }
-
-        private IEnumerator ProcessInventoryItems()
-        {
-            _debugTimer.Restart();
-            yield return ParseItems();
-
-            var cursorPosPreMoving = Input.ForceMousePosition;
-            if (_dropItems.Count > 0) 
-                yield return StashItemsIncrementer();
-
-            yield return ProcessRefills();
-            yield return Input.SetCursorPositionSmooth(new Vector2(cursorPosPreMoving.X, cursorPosPreMoving.Y));
-            Input.MouseMove();
-
-            _coroutineWorker = Core.ParallelRunner.FindByName(CoroutineName);
-            _coroutineWorker?.Done();
-
-            _debugTimer.Restart();
-            _debugTimer.Stop();
         }
 
         private IEnumerator ProcessSwitchToTab(int index)
