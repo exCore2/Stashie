@@ -649,13 +649,13 @@ namespace Stashie
                 if (invItem.Item == null || invItem.Address == 0) continue;
                 if (CheckIgnoreCells(invItem)) continue;
 
-                var testItem = new ItemData(invItem.Item, GameController.Files, null, calculateClickPos(invItem));
-                var result = CheckFilters(testItem);
+                var testItem = new ItemData(invItem.Item, GameController.Files);
+                var result = CheckFilters(testItem, calculateClickPos(invItem));
                 if (result != null)
                     _dropItems.Add(result);
             }
         }
-        private Vector2N calculateClickPos(InventSlotItem invItem)
+        private Vector2 calculateClickPos(InventSlotItem invItem)
         {
             //hacky clickpos calc work
 
@@ -664,7 +664,7 @@ namespace Stashie
             var CellHeight = InventoryPanelRectF.Height / 5;
             var itemInventPosition = invItem.InventoryPosition;
 
-            Vector2N clickpos = new Vector2N(
+            Vector2 clickpos = new Vector2(
                 InventoryPanelRectF.Location.X + (CellWidth / 2) + (itemInventPosition.X * CellWidth),
                 InventoryPanelRectF.Location.Y + (CellHeight / 2) + (itemInventPosition.Y * CellHeight)
                 );
@@ -693,7 +693,7 @@ namespace Stashie
             return Settings.IgnoredCells[inventPosY, inventPosX] != 0; //No need to check all item size
         }
 
-        private FilterResult CheckFilters(ItemData itemData)
+        private FilterResult CheckFilters(ItemData itemData, Vector2 clickPos)
         {
             foreach (var filter in currentFilter)
             {
@@ -701,7 +701,7 @@ namespace Stashie
                 {
                     if (!filter.AllowProcess) continue;
 
-                    if (filter.CompareItem(itemData, filter.Query)) return new FilterResult(filter, itemData);
+                    if (filter.CompareItem(itemData, filter.Query)) return new FilterResult(filter, itemData, clickPos);
                 }
                 catch (Exception ex)
                 {

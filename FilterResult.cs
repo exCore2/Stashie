@@ -6,12 +6,12 @@ namespace Stashie
 {
     public class FilterResult
     {
-        public FilterResult(CustomFilter filter, ItemData itemData)
+        public FilterResult(CustomFilter filter, ItemData itemData, Vector2 clickPos)
         {
             Filter = filter;
             ItemData = itemData;
             StashIndex = filter.StashIndexNode.Index;
-            ClickPos = itemData.CachedClickPosition.ToSharpDx();
+            ClickPos = clickPos;
             // TODO: affinity + shifting
             SkipSwitchTab = filter.Affinity;
             ShiftForStashing = filter.Shifting;
