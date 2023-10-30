@@ -1,6 +1,6 @@
-﻿using SharpDX;
+﻿using ExileCore.Shared.Helpers;
 using ItemFilterLibrary;
-using ExileCore.Shared.Helpers;
+using SharpDX;
 
 namespace Stashie
 {

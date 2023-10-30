@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-using ExileCore;
-using SharpDX;
+﻿using ExileCore;
 using ItemFilterLibrary;
-using System;
+using System.Collections.Generic;
 
 namespace Stashie
 {
@@ -65,7 +63,7 @@ namespace Stashie
                     SubmenuName = parentMenu
                 };
 
-                newFilter.Query = ItemFilter.LoadFromStringWithLine(filter, i+1);
+                newFilter.Query = ItemFilter.LoadFromStringWithLine(filter, i + 1);
 
                 // Check if there was an error during processing and set the flag accordingly
                 var filterErrorParse = newFilter.Query.FailedToCompile;

@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Windows.Forms;
-using ExileCore.Shared.Attributes;
+﻿using ExileCore.Shared.Attributes;
 using ExileCore.Shared.Interfaces;
 using ExileCore.Shared.Nodes;
+using System.Collections.Generic;
+using System.Windows.Forms;
 
 namespace Stashie
 {
@@ -11,7 +11,7 @@ namespace Stashie
         public List<string> AllStashNames = new List<string>();
         public Dictionary<string, ListIndexNode> CustomFilterOptions;
         public Dictionary<string, RangeNode<int>> CustomRefillOptions;
-        
+
 
         public StashieSettings()
         {
@@ -56,7 +56,7 @@ namespace Stashie
             "After Stashie has dropped all items to their respective tabs, then go to the set tab.")]
         public ToggleNode VisitTabWhenDone { get; set; }
 
-        [Menu("tab (index)")] 
+        [Menu("tab (index)")]
         public RangeNode<int> TabToVisitWhenDone { get; set; }
         [Menu("Go back to the tab you were in prior to Stashing")]
         public ToggleNode BackToOriginalTab { get; set; }
@@ -78,6 +78,6 @@ namespace Stashie
             {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
             {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}
         };
-        
+
     }
 }

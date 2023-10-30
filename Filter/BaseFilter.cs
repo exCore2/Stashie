@@ -1,6 +1,5 @@
-﻿using System.Collections.Generic;
-using JM.LinqFaster;
-using ItemFilterLibrary;
+﻿using ItemFilterLibrary;
+using System.Collections.Generic;
 
 namespace Stashie
 {
