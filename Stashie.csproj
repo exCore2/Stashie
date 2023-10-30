@@ -25,5 +25,8 @@
     <Reference Include="ExileCore">
       <HintPath>..\..\..\ExileCore.dll</HintPath>
     </Reference>
+    <Reference Include="ItemFilterLibrary">
+      <HintPath>..\..\..\ItemFilterLibrary.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>

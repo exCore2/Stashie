@@ -1,7 +1,9 @@
-﻿namespace Stashie
+﻿using ItemFilterLibrary;
+
+namespace Stashie
 {
     public interface IIFilter
     {
-        bool CompareItem(ItemData itemData);
+        bool CompareItem(ItemData itemData, ItemFilterData filterData);
     }
 }

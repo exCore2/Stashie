@@ -16,7 +16,8 @@ using ImGuiNET;
 using SharpDX;
 using static ExileCore.PoEMemory.MemoryObjects.ServerInventory;
 using Vector4 = System.Numerics.Vector4;
-//using Vector2 = System.Numerics.Vector2;
+using Vector2N = System.Numerics.Vector2;
+using ItemFilterLibrary;
 
 namespace Stashie
 {
@@ -29,12 +30,8 @@ namespace Stashie
         private const int InputDelay = 15;
         private const string CoroutineName = "Drop To Stash";
         private readonly Stopwatch _debugTimer = new Stopwatch();
-        private readonly Stopwatch _stackItemTimer = new Stopwatch();
-        private readonly WaitTime _wait10Ms = new WaitTime(10);
-        private readonly WaitTime _wait3Ms = new WaitTime(3);
         private Vector2 _clickWindowOffset;
         private List<CustomFilter> _customFiltersPrimary;
-        private List<CustomFilter> _customFiltersSecondary;
         private List<RefillProcessor> _customRefills;
         private List<FilterResult> _dropItems;
         private List<ListIndexNode> _settingsListNodes;
@@ -46,8 +43,8 @@ namespace Stashie
         private int _visibleStashIndex = -1;
         private const int MaxShownSidebarStashTabs = 31;
         private int _stashCount;
-        private NormalInventoryItem lastHoverItem;
         private bool secondaryFilterActive = false;
+        private ItemFilter _itemFilter;
 
         public StashieCore()
         {
@@ -624,15 +621,14 @@ namespace Stashie
             {
                 if (invItem.Item == null || invItem.Address == 0) continue;
                 if (CheckIgnoreCells(invItem)) continue;
-                var baseItemType = GameController.Files.BaseItemTypes.Translate(invItem.Item.Path);
 
-                var testItem = new ItemData(invItem, baseItemType, calculateClickPos(invItem));
+                var testItem = new ItemData(invItem.Item, GameController.Files, null, calculateClickPos(invItem));
                 var result = CheckFilters(testItem);
                 if (result != null)
                     _dropItems.Add(result);
             }
         }
-        private Vector2 calculateClickPos(InventSlotItem invItem)
+        private Vector2N calculateClickPos(InventSlotItem invItem)
         {
             //hacky clickpos calc work
             
@@ -641,7 +637,7 @@ namespace Stashie
             var CellHeight = InventoryPanelRectF.Height / 5;
             var itemInventPosition = invItem.InventoryPosition;
 
-            Vector2 clickpos = new Vector2(
+            Vector2N clickpos = new Vector2N(
                 InventoryPanelRectF.Location.X + (CellWidth / 2) + (itemInventPosition.X * CellWidth), 
                 InventoryPanelRectF.Location.Y + (CellHeight / 2) + (itemInventPosition.Y * CellHeight)
                 );
@@ -678,7 +674,7 @@ namespace Stashie
                 {
                     if (!filter.AllowProcess) continue;
 
-                    if (filter.CompareItem(itemData)) return new FilterResult(filter, itemData);
+                    if (filter.CompareItem(itemData, filter.Query)) return new FilterResult(filter, itemData);
                 }
                 catch (Exception ex)
                 {
@@ -711,7 +707,7 @@ namespace Stashie
             LogMessage($"Want to drop {itemsSortedByStash.Count} items.");
             foreach(var stashresult in itemsSortedByStash)
             {
-                _coroutineIteration++;
+                _coroutineIteration++; 
                 _coroutineWorker?.UpdateTicks(_coroutineIteration);
                 var maxTryTime = _debugTimer.ElapsedMilliseconds + 2000;
                 //move to correct tab
