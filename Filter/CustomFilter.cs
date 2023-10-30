@@ -7,7 +7,7 @@ namespace Stashie
         public string Name { get; set; }
         public ListIndexNode StashIndexNode { get; set; }
         public string SubmenuName { get; set; }
-        public ItemFilterData Query { get; set; }
+        public ItemQuery Query { get; set; }
         public int Index { get; set; }
         public bool AllowProcess => StashIndexNode.Index != -1;
         public bool Shifting { get; set; }

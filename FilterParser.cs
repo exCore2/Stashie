@@ -63,7 +63,7 @@ namespace Stashie
                     SubmenuName = parentMenu
                 };
 
-                newFilter.Query = ItemFilter.LoadFromStringWithLine(filter, i + 1);
+                newFilter.Query = ItemQuery.Load(filter, filter, i + 1);
 
                 // Check if there was an error during processing and set the flag accordingly
                 var filterErrorParse = newFilter.Query.FailedToCompile;

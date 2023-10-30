@@ -7,9 +7,9 @@ namespace Stashie
     {
         public List<IIFilter> Filters { get; } = new List<IIFilter>();
         public bool BAny { get; set; }
-        public bool CompareItem(ItemData itemData, ItemFilterData itemFilter)
+        public bool CompareItem(ItemData itemData, ItemQuery itemFilter)
         {
-            return ItemFilter.Matches(itemData, itemFilter.CompiledQuery);
+            return itemFilter.Matches(itemData);
         }
     }
 }
