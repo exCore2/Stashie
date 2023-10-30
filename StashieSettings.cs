@@ -34,7 +34,10 @@ namespace Stashie
         }
 
 
-        [Menu("Stash Hotkey")] 
+        [Menu("Filter File")]
+        public ListNode FilterFile { get; set; } = new ListNode();
+
+        [Menu("Stash Hotkey")]
         public HotkeyNode DropHotkey { get; set; }
         [Menu("Switch Filter Hotkey")]
         public HotkeyNode SwitchFilterhotkey { get; set; }

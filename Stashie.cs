@@ -24,13 +24,12 @@ namespace Stashie
     {
         private const string StashTabsNameChecker = "Stash Tabs Name Checker";
         private const string FiltersConfigFilePrimary = "FiltersConfig.txt";
-        private const string FiltersConfigFileSecondary = "FiltersConfig2.txt";
         private const int WhileDelay = 5;
         private const int InputDelay = 15;
         private const string CoroutineName = "Drop To Stash";
         private readonly Stopwatch _debugTimer = new Stopwatch();
         private Vector2 _clickWindowOffset;
-        private List<CustomFilter> _customFiltersPrimary;
+        private List<CustomFilter> currentFilter;
         private List<RefillProcessor> _customRefills;
         private List<FilterResult> _dropItems;
         private List<ListIndexNode> _settingsListNodes;
@@ -117,6 +116,7 @@ namespace Stashie
             Settings.DropHotkey.OnValueChanged += () => { Input.RegisterKey(Settings.DropHotkey); };
             Settings.SwitchFilterhotkey.OnValueChanged += () => { Input.RegisterKey(Settings.SwitchFilterhotkey); };
             _stashCount = (int) GameController.Game.IngameState.IngameUi.StashElement.TotalStashes;
+            Settings.FilterFile.OnValueSelected = _ => LoadCustomFilters();
 
             return true;
         }
@@ -166,10 +166,7 @@ namespace Stashie
 
         private void SaveDefaultConfigsToDisk()
         {
-            var path = $"{DirectoryFullName}\\GitUpdateConfig.txt";
-            const string gitUpdateConfig = "Owner:nymann\r\n" + "Name:Stashie\r\n" + "Release\r\n";
-            WriteToNonExistentFile(path, gitUpdateConfig);
-            path = $"{DirectoryFullName}\\RefillCurrency.txt";
+            var path = $"{ConfigDirectory}\\RefillCurrency.txt";
 
             const string refillCurrency = "//MenuName:\t\t\tClassName,\t\t\tStackSize,\tInventoryX,\tInventoryY\r\n" +
                                           "Portal Scrolls:\t\tPortal Scroll,\t\t40,\t\t\t12,\t\t\t1\r\n" +
@@ -177,7 +174,7 @@ namespace Stashie
                                           "//Chances:\t\t\tOrb of Chance,\t\t20,\t\t\t12,\t\t\t3";
 
             WriteToNonExistentFile(path, refillCurrency);
-            path = $"{DirectoryFullName}\\FiltersConfig.txt";
+            path = $"{ConfigDirectory}\\Default Config.ifl";
 
             const string filtersConfig =
 
@@ -226,26 +223,46 @@ namespace Stashie
 
         private void LoadCustomFilters()
         {
-            string filter = FiltersConfigFilePrimary;
-            if (secondaryFilterActive) 
+            var pickitConfigFileDirectory = Path.Combine(ConfigDirectory);
+
+            if (!Directory.Exists(pickitConfigFileDirectory))
             {
-                filter = FiltersConfigFileSecondary;
+                Directory.CreateDirectory(pickitConfigFileDirectory);
+                return;
             }
-            
-            var filterFilePath = Path.Combine(DirectoryFullName, filter);
-            var filterLines = File.ReadAllLines(filterFilePath);
-            _customFiltersPrimary = FilterParser.Parse(filterLines);
 
-            foreach (var customFilter in _customFiltersPrimary)
+            var dirInfo = new DirectoryInfo(pickitConfigFileDirectory);
+            Settings.FilterFile.Values = dirInfo.GetFiles("*.ifl").Select(x => Path.GetFileNameWithoutExtension(x.Name)).ToList();
+            if (Settings.FilterFile.Values.Any() && !Settings.FilterFile.Values.Contains(Settings.FilterFile.Value))
             {
-                if (!Settings.CustomFilterOptions.TryGetValue(customFilter.Name, out var indexNodeS))
-                {
-                    indexNodeS = new ListIndexNode {Value = "Ignore", Index = -1};
-                    Settings.CustomFilterOptions.Add(customFilter.Name, indexNodeS);
-                }
+                Settings.FilterFile.Value = Settings.FilterFile.Values.First();
+            }
 
-                customFilter.StashIndexNode = indexNodeS;
-                _settingsListNodes.Add(indexNodeS);
+            if (!string.IsNullOrWhiteSpace(Settings.FilterFile.Value))
+            {
+                var filterFilePath = Path.Combine(pickitConfigFileDirectory, $"{Settings.FilterFile.Value}.ifl");
+                if (File.Exists(filterFilePath))
+                {
+                    var filterLines = File.ReadAllLines(filterFilePath);
+                    currentFilter = FilterParser.Parse(filterLines);
+
+                    foreach (var customFilter in currentFilter)
+                    {
+                        if (!Settings.CustomFilterOptions.TryGetValue(customFilter.Name, out var indexNodeS))
+                        {
+                            indexNodeS = new ListIndexNode { Value = "Ignore", Index = -1 };
+                            Settings.CustomFilterOptions.Add(customFilter.Name, indexNodeS);
+                        }
+
+                        customFilter.StashIndexNode = indexNodeS;
+                        _settingsListNodes.Add(indexNodeS);
+                    }
+                }
+                else
+                {
+                    currentFilter = null;
+                    LogError("Item filter file not found, plugin will not work");
+                }
             }
         }
 
@@ -327,7 +344,7 @@ namespace Stashie
 
             _filterTabs = null;
 
-            foreach (var customFilter in _customFiltersPrimary.GroupBy(x => x.SubmenuName, e => e))
+            foreach (var customFilter in currentFilter.GroupBy(x => x.SubmenuName, e => e))
                 _filterTabs += () =>
                 {
                     ImGui.TextColored(new Vector4(0f, 1f, 0.022f, 1f), customFilter.Key);
@@ -338,10 +355,10 @@ namespace Stashie
                             var formattableString = $"{filter.Name} => {_renamedAllStashNames[indexNode.Index + 1]}";
 
                             ImGui.Columns(2, formattableString, true);
-                            ImGui.SetColumnWidth(0, 300);
-                            ImGui.SetColumnWidth(1, 160);
+                            ImGui.SetColumnWidth(0, 320);
+                            ImGui.SetColumnWidth(1, 300);
 
-                            if (ImGui.Button(formattableString, new System.Numerics.Vector2(180, 20)))
+                            if (ImGui.Button(formattableString, new Vector2N(300, 20)))
                                 ImGui.OpenPopup(formattableString);
 
                             ImGui.SameLine();
@@ -372,7 +389,7 @@ namespace Stashie
                             {
                                 x++;
 
-                                if (ImGui.Button($"{name}", new System.Numerics.Vector2(100, 20)))
+                                if (ImGui.Button($"{name}", new Vector2N(100, 20)))
                                 {
                                     indexNode.Value = name;
                                     OnSettingsStashNameChanged(indexNode, name);
@@ -385,7 +402,7 @@ namespace Stashie
 
                             ImGui.Spacing();
                             ImGuiNative.igIndent(350);
-                            if (ImGui.Button("Close", new System.Numerics.Vector2(100, 20)))
+                            if (ImGui.Button("Close", new Vector2N(100, 20)))
                                 ImGui.CloseCurrentPopup();
 
                             ImGui.EndPopup();
@@ -399,7 +416,7 @@ namespace Stashie
 
         private void LoadCustomRefills()
         {
-            _customRefills = RefillParser.Parse(DirectoryFullName);
+            _customRefills = RefillParser.Parse(ConfigDirectory);
             if (_customRefills.Count == 0) return;
 
             foreach (var refill in _customRefills)
@@ -578,7 +595,7 @@ namespace Stashie
 
         private FilterResult CheckFilters(ItemData itemData)
         {
-            foreach (var filter in _customFiltersPrimary)
+            foreach (var filter in currentFilter)
             {
                 try
                 {
