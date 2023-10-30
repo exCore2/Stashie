@@ -217,6 +217,12 @@ namespace Stashie
             "\r\n" +
             "//Delve Tab\r\n" +
             "Delve Tab::Path.Contains(\"CurrencyDelveCrafting\") || ClassName == \"DelveStackableSocketableCurrency\"::false::false::Delve Tab\r\n" +
+            "\r\nMap" +
+            "//Delve Tab\r\n" +
+            "Maps::IsMap && !IsBlightMap && !IsElderGuardianMap::false::false::Map Tab\r\n" +
+            "Blighted Maps::IsMap && IsBlightMap && !IsElderGuardianMap::false::false::Map Tab\r\n" +
+            "Elder Guardian Maps::IsMap && !IsBlightMap && IsElderGuardianMap::false::false::Map Tab\r\n" +
+            "Invitations::ClassName == \"MiscMapItem\" && BaseName.Contains(\"Maven's Invitation\")::false::false::Map Tab\r\n" +
             "\r\n" +
             "//Crucible\r\n" +
             "Crucible Tab::BaseName.Contains(\"Primeval Remnant\")::false::false::Crucible Tab\r\n" +
