@@ -1,5 +1,4 @@
-﻿using ExileCore.Shared.Helpers;
-using ItemFilterLibrary;
+﻿using ItemFilterLibrary;
 using SharpDX;
 
 namespace Stashie
@@ -12,7 +11,6 @@ namespace Stashie
             ItemData = itemData;
             StashIndex = filter.StashIndexNode.Index;
             ClickPos = clickPos;
-            // TODO: affinity + shifting
             SkipSwitchTab = filter.Affinity;
             ShiftForStashing = filter.Shifting;
         }

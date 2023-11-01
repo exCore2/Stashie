@@ -17,7 +17,6 @@ namespace Stashie
         {
             Enable = new ToggleNode(false);
             DropHotkey = Keys.F3;
-            SwitchFilterhotkey = Keys.F4;
             ExtraDelay = new RangeNode<int>(0, 0, 2000);
             HoverItemDelay = new RangeNode<int>(5, 0, 2000);
             StashItemDelay = new RangeNode<int>(5, 0, 2000);
@@ -39,9 +38,6 @@ namespace Stashie
 
         [Menu("Stash Hotkey")]
         public HotkeyNode DropHotkey { get; set; }
-        [Menu("Switch Filter Hotkey")]
-        public HotkeyNode SwitchFilterhotkey { get; set; }
-
         [Menu("Extra Delay", "Delay to wait after each inventory clearing attempt(in ms).")]
         public RangeNode<int> ExtraDelay { get; set; }
         [Menu("HoverItem Delay", "Delay used to wait inbetween checks for the Hoveritem (in ms).")]

@@ -113,7 +113,6 @@ namespace Stashie
             Input.RegisterKey(Settings.DropHotkey);
 
             Settings.DropHotkey.OnValueChanged += () => { Input.RegisterKey(Settings.DropHotkey); };
-            Settings.SwitchFilterhotkey.OnValueChanged += () => { Input.RegisterKey(Settings.SwitchFilterhotkey); };
             _stashCount = (int)GameController.Game.IngameState.IngameUi.StashElement.TotalStashes;
             Settings.FilterFile.OnValueSelected = _ => LoadCustomFilters();
 
@@ -536,15 +535,6 @@ namespace Stashie
 
         public override Job Tick()
         {
-            if (Core.ParallelRunner.FindByName("Stashie_DropItemsToStash") == null)
-            {
-                if (Settings.SwitchFilterhotkey.PressedOnce())
-                {
-                    secondaryFilterActive = !secondaryFilterActive;
-                    SetupOrClose();
-                    LogMessage($"Stashie: Currently active Filter: {(!secondaryFilterActive ? "primary" : "secondary")}", 5);
-                }
-            }
             if (!stashingRequirementsMet() && Core.ParallelRunner.FindByName("Stashie_DropItemsToStash") != null)
             {
                 StopCoroutine("Stashie_DropItemsToStash");
