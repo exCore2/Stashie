@@ -217,7 +217,7 @@ namespace Stashie
             "\r\n" +
             "//Delve Tab\r\n" +
             "Delve Tab::Path.Contains(\"CurrencyDelveCrafting\") || ClassName == \"DelveStackableSocketableCurrency\"::false::false::Delve Tab\r\n" +
-            "\r\nMap" +
+            "\r\n" +
             "//Delve Tab\r\n" +
             "Maps::IsMap && !IsBlightMap && !IsElderGuardianMap::false::false::Map Tab\r\n" +
             "Blighted Maps::IsMap && IsBlightMap && !IsElderGuardianMap::false::false::Map Tab\r\n" +
