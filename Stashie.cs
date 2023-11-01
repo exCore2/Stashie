@@ -285,7 +285,7 @@ namespace Stashie
             "Medium Cluster Jewel::ClassName == \"Jewel\" && BaseName.Contains(\"Medium Cluster\") && Rarity != ItemRarity.Unique::false::false::Jewels\r\n" +
             "Large Cluster Jewel::ClassName == \"Jewel\" && BaseName.Contains(\"Large Cluster\") && Rarity != ItemRarity.Unique::false::false::Jewels\r\n" +
             "All Cluster Jewel::ClassName == \"Jewel\" && BaseName.Contains(\"Cluster\") && Rarity != ItemRarity.Unique::false::false::Jewels\r\n" +
-            "Jewels::ClassName == \"Jewel\" && BaseName.Contains(\"Cluster\") && Rarity != ItemRarity.Unique::false::false::Jewels\r\n" +
+            "Jewels::ClassName == \"Jewel\" && Rarity != ItemRarity.Unique::false::false::Jewels\r\n" +
             "\r\n" +
             "// 6 Link + 6 Sockets\r\n" +
             "6 Link::SocketInfo.LargestLinkSize == 6::true::false::Links + Sockets\r\n" +
