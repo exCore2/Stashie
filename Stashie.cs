@@ -262,7 +262,7 @@ namespace Stashie
             "C Helms::!IsIdentified && Rarity == ItemRarity.Rare && ItemLevel >= 60 && ItemLevel <= 74 && ClassName == \"Helmet\"::false::false::Chaos Recipe\r\n" +
             "C Body Armours::!IsIdentified && Rarity == ItemRarity.Rare && ItemLevel >= 60 && ItemLevel <= 74 && ClassName == \"Body Armour\"::false::false::Chaos Recipe\r\n" +
             "C Boots::!IsIdentified && Rarity == ItemRarity.Rare && ItemLevel >= 60 && ItemLevel <= 74 && ClassName == \"Boots\"::false::false::Chaos Recipe\r\n" +
-            "C Boots::!IsIdentified && Rarity == ItemRarity.Rare && ItemLevel >= 60 && ItemLevel <= 74 && ClassName == \"Gloves\"::false::false::Chaos Recipe\r\n" +
+            "C Gloves::!IsIdentified && Rarity == ItemRarity.Rare && ItemLevel >= 60 && ItemLevel <= 74 && ClassName == \"Gloves\"::false::false::Chaos Recipe\r\n" +
             "\r\n" +
             "//Uniques\r\n" +
             "All Unique Items::Rarity == ItemRarity.Unique && ClassName != \"Map\"::false::false::Uniques\r\n" +
