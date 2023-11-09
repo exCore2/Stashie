@@ -428,7 +428,7 @@ namespace Stashie
                     foreach (var parentMenu in currentFilter)
                         if (Settings.CustomFilterOptions.TryGetValue(parentMenu.ParentMenuName, out var indexNode))
                         {
-                            var formattableString = $"{parentMenu.ParentMenuName} => {_renamedAllStashNames[indexNode.Index + 1]}";
+                            var formattableString = $"{parentMenu.ParentMenuName}";
 
                             ImGui.Columns(2, formattableString, true);
                             ImGui.SetColumnWidth(0, 320);

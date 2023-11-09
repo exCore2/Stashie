@@ -1,30 +1,318 @@
 {
   "ParentMenu": [
     {
-      "MenuName": "Menu 1",
+      "MenuName": "Overwrites",
       "Filters": [
         {
-          "FilterName": "Not a Weapon",
-          "RawQuery": ["!IsWeapon"],
+          "FilterName": "Blight Annointed Items",
+          "RawQuery": [ "FindMods(\"grantedpassive\").Any(Values[0] >= -40000) || FindMods(\"BlightEnchantment\").Any(Values[0] >= -40000)" ]
+        },
+        {
+          "FilterName": "Convoking Wands [ilvl86]",
+          "RawQuery": [ "BaseName == \"Convoking Wand\" && ItemLevel >= 86" ]
+        },
+        {
+          "FilterName": "Jewels",
+          "RawQuery": [ "ClassName == \"Jewel\"" ]
+        },
+        {
+          "FilterName": "City Square",
+          "RawQuery": [ "IsMap && BaseName == \"City Square Map\" && MapTier == 16 && !IsCorrupted && !IsElderGuardianMap" ]
+        },
+        {
+          "FilterName": "City Square Corrupted",
+          "RawQuery": [ "IsMap && BaseName == \"City Square Map\" && MapTier == 16 && IsCorrupted && !IsElderGuardianMap" ]
+        },
+        {
+          "FilterName": "Vaal Temple Corrupted",
+          "RawQuery": [ "IsMap && BaseName == \"Vaal Temple Map\" && MapTier == 16 && IsCorrupted && !IsElderGuardianMap" ]
+        }
+      ]
+    },
+    {
+      "MenuName": "All Currency",
+      "Filters": [
+        {
+          "FilterName": "All",
+          "RawQuery": [
+            "ClassName == \"StackableCurrency\"",
+            "&& !ContainsString(Path, new string[] { \"CurrencyDelveCrafting\", \"CurrencyItemisedProphecy\", \"CurrencyAfflictionOrb\", \"Mushrune\", \"Essence\" })",
+            "&& !ContainsString(BaseName, new string[] { \"Stacked Deck\", \"Catalyst\", \"Primeval Remnant\", \"Remnant\", \"Splinter\", \"Oil Extractor\" })"
+          ]
+        },
+        {
+          "FilterName": "Stacked Decks",
+          "RawQuery": [ "BaseName == \"Stacked Deck\"" ]
+        }
+      ]
+    },
+    {
+      "MenuName": "Fragment Tab",
+      "Filters": [
+        {
+          "FilterName": "All",
+          "RawQuery": [
+            "(ClassName == \"MapFragment\" || ClassName == \"LabyrinthMapItem\" || ContainsString(BaseName, new string[] { \"Splinter\", \"Scarab\" }))",
+            "&& !ContainsString(BaseName, new string[] { \"Primeval Remnant\" })",
+            "&& !ContainsString(Path, new string[] { \"CurrencyAfflictionShard\" })"
+          ]
+        }
+      ]
+    },
+    {
+      "MenuName": "Div Cards Tab",
+      "Filters": [
+        {
+          "FilterName": "Div Cars",
+          "RawQuery": [ "ClassName == \"DivinationCard\"" ]
+        }
+      ]
+    },
+    {
+      "MenuName": "Essence Tab",
+      "Filters": [
+        {
+          "FilterName": "All",
+          "RawQuery": [
+            "ContainsString(BaseName, new string[] { \"Essence\", \"Remnant\" }) ",
+            "&& !ClassName.Contains(\"Skill Gem\") && BaseName != \"Primeval Remnant\""
+          ]
+        }
+      ]
+    },
+    {
+      "MenuName": "Delve Tab",
+      "Filters": [
+        {
+          "FilterName": "All",
+          "RawQuery": [ "Path.Contains(\"CurrencyDelveCrafting\") || ClassName == \"DelveStackableSocketableCurrency\"" ]
+        }
+      ]
+    },
+    {
+      "MenuName": "Map Tab",
+      "Filters": [
+        {
+          "FilterName": "Maps",
+          "RawQuery": [ "IsMap && !IsBlightMap && !IsElderGuardianMap" ]
+        },
+        {
+          "FilterName": "Elder Guardian Maps",
+          "RawQuery": [ "IsMap && !IsBlightMap && IsElderGuardianMap" ]
+        },
+        {
+          "FilterName": "Invitations",
+          "RawQuery": [ "ClassName == \"MiscMapItem\" && BaseName.Contains(\"Maven's Invitation\")" ]
+        }
+      ]
+    },
+    {
+      "MenuName": "Metamorph",
+      "Filters": [
+        {
+          "FilterName": "All Organs",
+          "RawQuery": [ "ClassName == \"MetamorphosisDNA\"" ]
+        },
+        {
+          "FilterName": "Catalysts",
+          "RawQuery": [ "BaseName.Contains(\"Catalyst\") && ClassName != \"DivinationCard\"" ]
+        }
+      ]
+    },
+    {
+      "MenuName": "Blight Tab",
+      "Filters": [
+        {
+          "FilterName": "Oils",
+          "RawQuery": [ "(BaseName.Contains(\"Oil\") && Path.Contains(\"Mushrune\")) || BaseName == \"Oil Extractor\"" ]
+        },
+        {
+          "FilterName": "Blighted Maps",
+          "RawQuery": [ "IsMap && IsBlightMap && !IsElderGuardianMap" ]
+        }
+      ]
+    },
+    {
+      "MenuName": "Delirium Tab",
+      "Filters": [
+        {
+          "FilterName": "Splinters",
+          "RawQuery": [ "Path.Contains(\"CurrencyAfflictionShard\")" ]
+        },
+        {
+          "FilterName": "Simu Map",
+          "RawQuery": [ "Path.Contains(\"CurrencyAfflictionFragment\")" ]
+        },
+        {
+          "FilterName": "Orbs",
+          "RawQuery": [ "Path.Contains(\"CurrencyAfflictionOrb\")" ]
+        }
+      ]
+    },
+    {
+      "MenuName": "Legion",
+      "Filters": [
+        {
+          "FilterName": "Incubators",
+          "RawQuery": [ "ClassName == \"IncubatorStackable\"" ]
+        }
+      ]
+    },
+    {
+      "MenuName": "Talismans",
+      "Filters": [
+        {
+          "FilterName": "All",
+          "RawQuery": [ "ClassName == \"Amulet\" && BaseName.Contains(\"Talisman\") && Rarity != ItemRarity.Unique" ]
+        }
+      ]
+    },
+    {
+      "MenuName": "Abyss Items",
+      "Filters": [
+        {
+          "FilterName": "Belt",
+          "RawQuery": [ "BaseName.Contains(\"Stygian\")" ]
+        }
+      ]
+    },
+    {
+      "MenuName": "Heist Locker",
+      "Filters": [
+        {
+          "FilterName": "Contracts",
+          "RawQuery": [ "ClassName.Contains(\"HeistContract\")" ]
+        },
+        {
+          "FilterName": "Blueprints",
+          "RawQuery": [ "ClassName.Contains(\"HeistBlueprint\")" ]
+        },
+        {
+          "FilterName": "Equipment",
+          "RawQuery": [ "ClassName.Contains(\"HeistEquipment\")" ]
+        },
+        {
+          "FilterName": "Trinket",
+          "RawQuery": [ "ClassName.Contains(\"Trinket\")" ]
+        },
+        {
+          "FilterName": "Objective",
+          "RawQuery": [ "ClassName.Contains(\"HeistObjective\")" ]
+        }
+      ]
+    },
+    {
+      "MenuName": "Chaos Recipe (ilvl between 60-74)",
+      "Filters": [
+        {
+          "FilterName": "Weapons",
+          "RawQuery": [ "!IsIdentified && Rarity == ItemRarity.Rare && ItemLevel >= 60 && ItemLevel <= 74 && IsWeapon" ]
+        },
+        {
+          "FilterName": "Jewelry",
+          "RawQuery": [ "!IsIdentified && Rarity == ItemRarity.Rare && ItemLevel >= 60 && ItemLevel <= 74 && ClassName == \"Ring\" || ClassName == \"Amulet\"" ]
+        },
+        {
+          "FilterName": "Belts",
+          "RawQuery": [ "!IsIdentified && Rarity == ItemRarity.Rare && ItemLevel >= 60 && ItemLevel <= 74 && ClassName == \"Belt\"" ]
+        },
+        {
+          "FilterName": "Helms",
+          "RawQuery": [ "!IsIdentified && Rarity == ItemRarity.Rare && ItemLevel >= 60 && ItemLevel <= 74 && ClassName == \"Helmet\"" ]
+        },
+        {
+          "FilterName": "Body Armours",
+          "RawQuery": [ "!IsIdentified && Rarity == ItemRarity.Rare && ItemLevel >= 60 && ItemLevel <= 74 && ClassName == \"Body Armour\"" ]
+        },
+        {
+          "FilterName": "Boots",
+          "RawQuery": [ "!IsIdentified && Rarity == ItemRarity.Rare && ItemLevel >= 60 && ItemLevel <= 74 && ClassName == \"Boots\"" ]
+        },
+        {
+          "FilterName": "Gloves",
+          "RawQuery": [ "!IsIdentified && Rarity == ItemRarity.Rare && ItemLevel >= 60 && ItemLevel <= 74 && ClassName == \"Gloves\"" ]
+        }
+      ]
+    },
+    {
+      "MenuName": "Uniques",
+      "Filters": [
+        {
+          "FilterName": "All",
+          "RawQuery": [ "Rarity == ItemRarity.Unique && ClassName != \"Map\"" ]
+        }
+      ]
+    },
+    {
+      "MenuName": "Veiled Items",
+      "Filters": [
+        {
+          "FilterName": "All",
+          "RawQuery": [ "VeiledModCount > 0" ]
+        }
+      ]
+    },
+    {
+      "MenuName": "Flasks",
+      "Filters": [
+        {
+          "FilterName": "All",
+          "RawQuery": [ "ClassName.Contains(\"Flask\") && Rarity != ItemRarity.Unique" ]
+        }
+      ]
+    },
+    {
+      "MenuName": "Skill Gems",
+      "Filters": [
+        {
+          "FilterName": "All",
+          "RawQuery": [ "ClassName.Contains(\" Skill Gem\")" ]
+        }
+      ]
+    },
+    {
+      "MenuName": "Jewels",
+      "Filters": [
+        {
+          "FilterName": "All",
+          "RawQuery": [
+            "ClassName == \"Jewel\"",
+            "|| ClassName == \"AbyssJewel\"",
+            "|| BaseName.Contains(\"Cluster\") && Rarity != ItemRarity.Unique"
+          ]
+        }
+      ]
+    },
+    {
+      "MenuName": "6 Link + 6 Sockets",
+      "Filters": [
+        {
+          "FilterName": "6 Link",
+          "RawQuery": [ "SocketInfo.LargestLinkSize == 6" ],
           "Shifting": true
         },
         {
-          "FilterName": "Currency",
-          "RawQuery": [
-            "ClassName == 'StackableCurrency'", 
-            "&& !IsWeapon" // get rekt kent.
-          ],
+          "FilterName": "6 Sockets",
+          "RawQuery": [ "SocketInfo.SocketNumber == 6" ],
           "Shifting": true
         }
       ]
     },
     {
-      "MenuName": "Menu 2",
+      "MenuName": "left over Rares",
       "Filters": [
         {
-          "FilterName": "Is A Weapon",
-          "RawQuery": ["IsWeapon"],
-          "Shifting": true
+          "FilterName": "All",
+          "RawQuery": [ "Rarity == ItemRarity.Rare" ]
+        }
+      ]
+    },
+    {
+      "MenuName": "left over Magics",
+      "Filters": [
+        {
+          "FilterName": "All",
+          "RawQuery": [ "Rarity == ItemRarity.Magic" ]
         }
       ]
     }

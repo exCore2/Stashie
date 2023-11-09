@@ -54,7 +54,7 @@ namespace Stashie
                     for (int j = 0; j < newFilters.ParentMenu[i].Filters.Count; j++)
                     {
 
-                        var compiledQuery = ItemQuery.Load(string.Join("", newFilters.ParentMenu[i].Filters[j].RawQuery).Replace('\'', '"').Replace("\n", ""));
+                        var compiledQuery = ItemQuery.Load(string.Join("", newFilters.ParentMenu[i].Filters[j].RawQuery).Replace("\n", ""));
 
                         // Check if there was an error during processing and set the flag accordingly
                         var filterErrorParse = compiledQuery.FailedToCompile;
