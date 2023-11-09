@@ -17,9 +17,9 @@
 
   <ItemGroup>
     <PackageReference Include="ImGui.NET" Version="1.88.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="SharpDX.Mathematics" Version="4.2.0" />
     <PackageReference Include="LinqFaster" Version="1.0.0" />
-    <PackageReference Include="YamlDotNet" Version="13.7.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -29,5 +29,9 @@
     <Reference Include="ItemFilterLibrary">
       <HintPath>..\..\..\ItemFilterLibrary.dll</HintPath>
     </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Example Filters\" />
   </ItemGroup>
 </Project>

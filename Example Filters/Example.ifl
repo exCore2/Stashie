@@ -1,18 +1,32 @@
-ParentMenu:
-  - MenuName: "Menu 1"
-    Filters:
-      - FilterName: "Not a Weapon"
-        RawQuery: 
-          - "!IsWeapon"
-        Shifting: true
-      - FilterName: "Currency"
-        RawQuery: 
-          - "ClassName == 'StackableCurrency'"
-        Shifting: true
-
-  - MenuName: "Menu 2"
-    Filters:
-      - FilterName: "Is A Weapon"
-        RawQuery: 
-          - "IsWeapon"
-        Shifting: true
+{
+  "ParentMenu": [
+    {
+      "MenuName": "Menu 1",
+      "Filters": [
+        {
+          "FilterName": "Not a Weapon",
+          "RawQuery": ["!IsWeapon"],
+          "Shifting": true
+        },
+        {
+          "FilterName": "Currency",
+          "RawQuery": [
+            "ClassName == 'StackableCurrency'", 
+            "&& !IsWeapon" // get rekt kent.
+          ],
+          "Shifting": true
+        }
+      ]
+    },
+    {
+      "MenuName": "Menu 2",
+      "Filters": [
+        {
+          "FilterName": "Is A Weapon",
+          "RawQuery": ["IsWeapon"],
+          "Shifting": true
+        }
+      ]
+    }
+  ]
+}

@@ -453,8 +453,8 @@ namespace Stashie
                                 OnSettingsStashNameChanged(indexNode, _stashTabNamesByIndex[item]);
                             }
 
-                            foreach (var ilter in parentMenu.Filters)
-                                ImGui.TextColored(new Vector4(0f, 1f, 0.022f, 1f), ilter.FilterName);
+                            foreach (var filter in parentMenu.Filters)
+                                ImGui.TextColored(new Vector4(0f, 1f, 0.022f, 1f), filter.FilterName);
 
                             ImGui.NextColumn();
                             ImGui.Columns(1, "", false);

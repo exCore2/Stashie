@@ -2,9 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using YamlDotNet.Serialization.NamingConventions;
-using YamlDotNet.Serialization;
 using ItemFilterLibrary;
+using Newtonsoft.Json;
 
 namespace Stashie
 {
@@ -42,9 +41,7 @@ namespace Stashie
             {
                 string fileContents = File.ReadAllText(filePath);
 
-                var deserializer = new DeserializerBuilder().Build();
-
-                var newFilters = deserializer.Deserialize<IFL>(fileContents);
+                var newFilters = JsonConvert.DeserializeObject<IFL>(fileContents);
 
                 var newFilter = 0;
                 for (int i = 0; i < newFilters.ParentMenu.Length; i++)
@@ -52,7 +49,6 @@ namespace Stashie
                     var newParent = new CustomFilter
                     {
                         ParentMenuName = newFilters.ParentMenu[i].MenuName,
-                        Filters = new List<CustomFilter.Filter>()
                     };
 
                     for (int j = 0; j < newFilters.ParentMenu[i].Filters.Count; j++)
@@ -66,14 +62,14 @@ namespace Stashie
                         // Add the parsed filter to the list if no parsing errors were encountered; otherwise, log an error message. FilterLibrary should return an error if it was incorrect anyway.
                         if (filterErrorParse)
                         {
-                            DebugWindow.LogError($"[Stashie] YAML Error loading. Parent: {newFilters.ParentMenu[i].MenuName}, Filter: {newFilters.ParentMenu[i].Filters[j].FilterName}", 15);
+                            DebugWindow.LogError($"[Stashie] JSON Error loading. Parent: {newFilters.ParentMenu[i].MenuName}, Filter: {newFilters.ParentMenu[i].Filters[j].FilterName}", 15);
                         }
                         else
                         {
-                            newParent.Filters.Add(new CustomFilter.Filter
+                            newParent.Filters.Add(new BaseFilter.Filter
                             {
                                 FilterName = newFilters.ParentMenu[i].Filters[j].FilterName,
-                                RawQuery = string.Join("", newFilters.ParentMenu[i].Filters[j].RawQuery),
+                                RawQuery = string.Join(" ", newFilters.ParentMenu[i].Filters[j].RawQuery),
                                 Shifting = newFilters.ParentMenu[i].Filters[j].Shifting ?? false,
                                 Affinity = newFilters.ParentMenu[i].Filters[j].Affinity ?? false,
                                 CompiledQuery = compiledQuery,
