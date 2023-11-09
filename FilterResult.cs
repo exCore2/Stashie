@@ -5,18 +5,17 @@ namespace Stashie
 {
     public class FilterResult
     {
-        public FilterResult(CustomFilter parent, BaseFilter.Filter filter, ItemData itemData, Vector2N clickPos)
+        public FilterResult(CustomFilter.Filter filter, ItemData itemData, Vector2N clickPos)
         {
-            Filter = parent;
+            Filter = filter;
             ItemData = itemData;
-            StashIndex = parent.StashIndexNode.Index;
+            StashIndex = filter.StashIndexNode.Index;
             ClickPos = clickPos;
             SkipSwitchTab = filter.Affinity ?? false;
             ShiftForStashing = filter.Shifting ?? false;
         }
 
-        public CustomFilter Parent { get; }
-        public CustomFilter Filter { get; }
+        public CustomFilter.Filter Filter { get; }
         public ItemData ItemData { get; }
         public int StashIndex { get; }
         public Vector2N ClickPos { get; }

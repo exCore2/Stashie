@@ -1,6 +1,5 @@
 ﻿using ExileCore;
 using ExileCore.PoEMemory.Components;
-using ExileCore.PoEMemory.MemoryObjects;
 using ExileCore.Shared;
 using ExileCore.Shared.Enums;
 using ExileCore.Shared.Helpers;
@@ -327,14 +326,17 @@ namespace Stashie
 
                     foreach (var customFilter in currentFilter)
                     {
-                        if (!Settings.CustomFilterOptions.TryGetValue(customFilter.ParentMenuName, out var indexNodeS))
+                        foreach (var filter in customFilter.Filters)
                         {
-                            indexNodeS = new ListIndexNode { Value = "Ignore", Index = -1 };
-                            Settings.CustomFilterOptions.Add(customFilter.ParentMenuName, indexNodeS);
-                        }
+                            if (!Settings.CustomFilterOptions.TryGetValue(customFilter.ParentMenuName+filter.FilterName, out var indexNodeS))
+                            {
+                                indexNodeS = new ListIndexNode { Value = "Ignore", Index = -1 };
+                                Settings.CustomFilterOptions.Add(customFilter.ParentMenuName + filter.FilterName, indexNodeS);
 
-                        customFilter.StashIndexNode = indexNodeS;
-                        _settingsListNodes.Add(indexNodeS);
+                            }
+                            filter.StashIndexNode = indexNodeS;
+                            _settingsListNodes.Add(indexNodeS);
+                        }
                     }
                 }
                 else
@@ -423,12 +425,15 @@ namespace Stashie
 
             _filterTabs = null;
 
+            foreach (var parent in currentFilter)
                 _filterTabs += () =>
                 {
-                    foreach (var parentMenu in currentFilter)
-                        if (Settings.CustomFilterOptions.TryGetValue(parentMenu.ParentMenuName, out var indexNode))
+                    ImGui.TextColored(new Vector4(0f, 1f, 0.022f, 1f), parent.ParentMenuName);
+
+                    foreach (var filter in parent.Filters)
+                        if (Settings.CustomFilterOptions.TryGetValue(parent.ParentMenuName+filter.FilterName, out var indexNode))
                         {
-                            var formattableString = $"{parentMenu.ParentMenuName}";
+                            var formattableString = $"{filter.FilterName} => {_renamedAllStashNames[indexNode.Index + 1]}##{parent.ParentMenuName + filter.FilterName}";
 
                             ImGui.Columns(2, formattableString, true);
                             ImGui.SetColumnWidth(0, 320);
@@ -441,20 +446,17 @@ namespace Stashie
                             ImGui.NextColumn();
 
                             var item = indexNode.Index + 1;
-                            var filterName = parentMenu.ParentMenuName;
+                            var filterName = filter.FilterName;
 
                             if (string.IsNullOrWhiteSpace(filterName))
                                 filterName = "Null";
 
-                            if (ImGui.Combo($"##{filterName}", ref item, _stashTabNamesByIndex,
+                            if (ImGui.Combo($"##{parent.ParentMenuName + filter.FilterName}", ref item, _stashTabNamesByIndex,
                                 _stashTabNamesByIndex.Length))
                             {
                                 indexNode.Value = _stashTabNamesByIndex[item];
                                 OnSettingsStashNameChanged(indexNode, _stashTabNamesByIndex[item]);
                             }
-
-                            foreach (var filter in parentMenu.Filters)
-                                ImGui.TextColored(new Vector4(0f, 1f, 0.022f, 1f), filter.FilterName);
 
                             ImGui.NextColumn();
                             ImGui.Columns(1, "", false);
@@ -486,7 +488,7 @@ namespace Stashie
 
                             ImGui.EndPopup();
                         }
-                        else 
+                        else
                         {
                             indexNode = new ListIndexNode { Value = "Ignore", Index = -1 };
                         }
@@ -665,10 +667,10 @@ namespace Stashie
                 {
                     try
                     {
-                        if (!filter.AllowProcess) continue;
+                        if (!subFilter.AllowProcess) continue;
 
                         if (filter.CompareItem(itemData, subFilter.CompiledQuery)) 
-                            return new FilterResult(filter, subFilter, itemData, clickPos);
+                            return new FilterResult(subFilter, itemData, clickPos);
                     }
                     catch (Exception ex)
                     {

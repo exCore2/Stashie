@@ -66,7 +66,7 @@ namespace Stashie
                         }
                         else
                         {
-                            newParent.Filters.Add(new BaseFilter.Filter
+                            newParent.Filters.Add(new CustomFilter.Filter
                             {
                                 FilterName = newFilters.ParentMenu[i].Filters[j].FilterName,
                                 RawQuery = string.Join(" ", newFilters.ParentMenu[i].Filters[j].RawQuery),
