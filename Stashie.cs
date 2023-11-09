@@ -3,6 +3,7 @@ using ExileCore.PoEMemory.Components;
 using ExileCore.PoEMemory.MemoryObjects;
 using ExileCore.Shared;
 using ExileCore.Shared.Enums;
+using ExileCore.Shared.Helpers;
 using ExileCore.Shared.Nodes;
 using ImGuiNET;
 using ItemFilterLibrary;
@@ -23,11 +24,9 @@ namespace Stashie
     public class StashieCore : BaseSettingsPlugin<StashieSettings>
     {
         private const string StashTabsNameChecker = "Stash Tabs Name Checker";
-        private const int WhileDelay = 5;
-        private const int InputDelay = 15;
         private const string CoroutineName = "Drop To Stash";
         private readonly Stopwatch _debugTimer = new Stopwatch();
-        private Vector2 _clickWindowOffset;
+        private Vector2N _clickWindowOffset;
         private List<CustomFilter> currentFilter;
         private List<RefillProcessor> _customRefills;
         private List<FilterResult> _dropItems;
@@ -40,11 +39,10 @@ namespace Stashie
         private int _visibleStashIndex = -1;
         private const int MaxShownSidebarStashTabs = 31;
         private int _stashCount;
-        private bool secondaryFilterActive = false;
 
         public StashieCore()
         {
-            Name = "StashieWithLinq";
+            Name = "Stashie (JSON) With Linq";
         }
 
         public override void ReceiveEvent(string eventId, object args)
@@ -145,37 +143,20 @@ namespace Stashie
             Core.ParallelRunner.Run(_stashTabNamesCoroutine);
         }
 
-        /// <summary>
-        /// Creates a new file and adds the content to it if the file doesn't exists.
-        /// If the file already exists, then no action is taken.
-        /// </summary>
-        /// <param name="path">The path to the file on disk</param>
-        /// <param name="content">The content it should contain</param>
         private static void WriteToNonExistentFile(string path, string content)
         {
             if (File.Exists(path)) return;
 
-            using (var streamWriter = new StreamWriter(path, true))
-            {
-                streamWriter.Write(content);
-                streamWriter.Close();
-            }
+            using var streamWriter = new StreamWriter(path, true);
+            streamWriter.Write(content);
+            streamWriter.Close();
         }
 
         private void SaveDefaultConfigsToDisk()
         {
-            var path = $"{ConfigDirectory}\\RefillCurrency.txt";
-
-            const string refillCurrency = "//MenuName:\t\t\tClassName,\t\t\tStackSize,\tInventoryX,\tInventoryY\r\n" +
-                                          "Portal Scrolls:\t\tPortal Scroll,\t\t40,\t\t\t12,\t\t\t1\r\n" +
-                                          "Scrolls of Wisdom:\tScroll of Wisdom,\t40,\t\t\t12,\t\t\t2\r\n" +
-                                          "//Chances:\t\t\tOrb of Chance,\t\t20,\t\t\t12,\t\t\t3";
-
-            WriteToNonExistentFile(path, refillCurrency);
-            path = $"{ConfigDirectory}\\Default Config.ifl";
+            var path = $"{ConfigDirectory}\\Default Config.ifl";
 
             const string filtersConfig =
-
             #region default config String
 
             "// Rule Structure:\r\n" +
@@ -262,7 +243,7 @@ namespace Stashie
             "C Helms::!IsIdentified && Rarity == ItemRarity.Rare && ItemLevel >= 60 && ItemLevel <= 74 && ClassName == \"Helmet\"::false::false::Chaos Recipe\r\n" +
             "C Body Armours::!IsIdentified && Rarity == ItemRarity.Rare && ItemLevel >= 60 && ItemLevel <= 74 && ClassName == \"Body Armour\"::false::false::Chaos Recipe\r\n" +
             "C Boots::!IsIdentified && Rarity == ItemRarity.Rare && ItemLevel >= 60 && ItemLevel <= 74 && ClassName == \"Boots\"::false::false::Chaos Recipe\r\n" +
-            "C Gloves::!IsIdentified && Rarity == ItemRarity.Rare && ItemLevel >= 60 && ItemLevel <= 74 && ClassName == \"Gloves\"::false::false::Chaos Recipe\r\n" +
+            "C Boots::!IsIdentified && Rarity == ItemRarity.Rare && ItemLevel >= 60 && ItemLevel <= 74 && ClassName == \"Gloves\"::false::false::Chaos Recipe\r\n" +
             "\r\n" +
             "//Uniques\r\n" +
             "All Unique Items::Rarity == ItemRarity.Unique && ClassName != \"Map\"::false::false::Uniques\r\n" +
@@ -342,15 +323,14 @@ namespace Stashie
                 var filterFilePath = Path.Combine(pickitConfigFileDirectory, $"{Settings.FilterFile.Value}.ifl");
                 if (File.Exists(filterFilePath))
                 {
-                    var filterLines = File.ReadAllLines(filterFilePath);
-                    currentFilter = FilterParser.Parse(filterLines);
+                    currentFilter = FilterParser.Load($"{Settings.FilterFile.Value}.ifl", filterFilePath);
 
                     foreach (var customFilter in currentFilter)
                     {
-                        if (!Settings.CustomFilterOptions.TryGetValue(customFilter.Name, out var indexNodeS))
+                        if (!Settings.CustomFilterOptions.TryGetValue(customFilter.ParentMenuName, out var indexNodeS))
                         {
                             indexNodeS = new ListIndexNode { Value = "Ignore", Index = -1 };
-                            Settings.CustomFilterOptions.Add(customFilter.Name, indexNodeS);
+                            Settings.CustomFilterOptions.Add(customFilter.ParentMenuName, indexNodeS);
                         }
 
                         customFilter.StashIndexNode = indexNodeS;
@@ -443,15 +423,12 @@ namespace Stashie
 
             _filterTabs = null;
 
-            foreach (var customFilter in currentFilter.GroupBy(x => x.SubmenuName, e => e))
                 _filterTabs += () =>
                 {
-                    ImGui.TextColored(new Vector4(0f, 1f, 0.022f, 1f), customFilter.Key);
-
-                    foreach (var filter in customFilter)
-                        if (Settings.CustomFilterOptions.TryGetValue(filter.Name, out var indexNode))
+                    foreach (var parentMenu in currentFilter)
+                        if (Settings.CustomFilterOptions.TryGetValue(parentMenu.ParentMenuName, out var indexNode))
                         {
-                            var formattableString = $"{filter.Name} => {_renamedAllStashNames[indexNode.Index + 1]}";
+                            var formattableString = $"{parentMenu.ParentMenuName} => {_renamedAllStashNames[indexNode.Index + 1]}";
 
                             ImGui.Columns(2, formattableString, true);
                             ImGui.SetColumnWidth(0, 320);
@@ -464,7 +441,7 @@ namespace Stashie
                             ImGui.NextColumn();
 
                             var item = indexNode.Index + 1;
-                            var filterName = filter.Name;
+                            var filterName = parentMenu.ParentMenuName;
 
                             if (string.IsNullOrWhiteSpace(filterName))
                                 filterName = "Null";
@@ -475,6 +452,9 @@ namespace Stashie
                                 indexNode.Value = _stashTabNamesByIndex[item];
                                 OnSettingsStashNameChanged(indexNode, _stashTabNamesByIndex[item]);
                             }
+
+                            foreach (var ilter in parentMenu.Filters)
+                                ImGui.TextColored(new Vector4(0f, 1f, 0.022f, 1f), ilter.FilterName);
 
                             ImGui.NextColumn();
                             ImGui.Columns(1, "", false);
@@ -506,7 +486,7 @@ namespace Stashie
 
                             ImGui.EndPopup();
                         }
-                        else
+                        else 
                         {
                             indexNode = new ListIndexNode { Value = "Ignore", Index = -1 };
                         }
@@ -535,7 +515,7 @@ namespace Stashie
 
         public override Job Tick()
         {
-            if (!stashingRequirementsMet() && Core.ParallelRunner.FindByName("Stashie_DropItemsToStash") != null)
+            if (!StashingRequirementsMet() && Core.ParallelRunner.FindByName("Stashie_DropItemsToStash") != null)
             {
                 StopCoroutine("Stashie_DropItemsToStash");
                 return null;
@@ -572,7 +552,7 @@ namespace Stashie
         }
         private IEnumerator DropToStashRoutine()
         {
-            var cursorPosPreMoving = Input.ForceMousePosition; //saving cursorposition
+            var cursorPosPreMoving = Input.ForceMousePositionNum; //saving cursorposition
             //try stashing items 3 times
             var originTab = GetIndexOfCurrentVisibleTab();
             yield return ParseItems();
@@ -596,20 +576,19 @@ namespace Stashie
                 }
             }
 
-
             //restoring cursorposition
             Input.SetCursorPos(cursorPosPreMoving);
             Input.MouseMove();
             StopCoroutine("Stashie_DropItemsToStash");
         }
 
-        private void CleanUp()
+        private static void CleanUp()
         {
             Input.KeyUp(Keys.LControlKey);
             Input.KeyUp(Keys.Shift);
         }
 
-        private bool stashingRequirementsMet()
+        private bool StashingRequirementsMet()
         {
             return GameController.Game.IngameState.IngameUi.InventoryPanel.IsVisible &&
                     GameController.Game.IngameState.IngameUi.StashElement.IsVisibleLocal;
@@ -633,36 +612,31 @@ namespace Stashie
 
             yield return new WaitFunctionTimed(() => invItems != null, true, 500, "ServerInventory->InventSlotItems is null!");
             _dropItems = new List<FilterResult>();
-            _clickWindowOffset = GameController.Window.GetWindowRectangle().TopLeft;
+            _clickWindowOffset = GameController.Window.GetWindowRectangle().TopLeft.ToVector2Num();
             foreach (var invItem in invItems)
             {
                 if (invItem.Item == null || invItem.Address == 0) continue;
                 if (CheckIgnoreCells(invItem)) continue;
 
                 var testItem = new ItemData(invItem.Item, GameController.Files);
-                var result = CheckFilters(testItem, calculateClickPos(invItem));
+                var result = CheckFilters(testItem, CalculateClickPos(invItem));
                 if (result != null)
                     _dropItems.Add(result);
             }
         }
-        private Vector2 calculateClickPos(InventSlotItem invItem)
+        private Vector2N CalculateClickPos(InventSlotItem invItem)
         {
             //hacky clickpos calc work
 
             var InventoryPanelRectF = GameController.IngameState.IngameUi.InventoryPanel[InventoryIndex.PlayerInventory].GetClientRect();
             var CellWidth = InventoryPanelRectF.Width / 12;
             var CellHeight = InventoryPanelRectF.Height / 5;
-            var itemInventPosition = invItem.InventoryPosition;
+            var itemInventPosition = invItem.InventoryPositionNum;
 
-            Vector2 clickpos = new Vector2(
+            Vector2N clickpos = new Vector2N(
                 InventoryPanelRectF.Location.X + (CellWidth / 2) + (itemInventPosition.X * CellWidth),
                 InventoryPanelRectF.Location.Y + (CellHeight / 2) + (itemInventPosition.Y * CellHeight)
                 );
-
-            //LogMessage($"CellWidth={CellWidth}, CellHeight={CellWidth}",5);
-            //LogMessage($"invPanelRectF.TopLeft.X = {InventoryPanelRectF.TopLeft.X}, invPanelRectF.TopLeft.Y = {InventoryPanelRectF.Location.Y}", 5);
-            //LogMessage($"itemInventPosition.X ={itemInventPosition.X}, itemInventPosition.Y ={itemInventPosition.Y}",5);
-            //LogMessage($"Clickpos.X = {clickpos.X}, Clickpos.Y = {clickpos.Y}",5);
 
             return clickpos;
         }
@@ -683,19 +657,23 @@ namespace Stashie
             return Settings.IgnoredCells[inventPosY, inventPosX] != 0; //No need to check all item size
         }
 
-        private FilterResult CheckFilters(ItemData itemData, Vector2 clickPos)
+        private FilterResult CheckFilters(ItemData itemData, Vector2N clickPos)
         {
             foreach (var filter in currentFilter)
             {
-                try
+                foreach ( var subFilter in filter.Filters)
                 {
-                    if (!filter.AllowProcess) continue;
+                    try
+                    {
+                        if (!filter.AllowProcess) continue;
 
-                    if (filter.CompareItem(itemData, filter.Query)) return new FilterResult(filter, itemData, clickPos);
-                }
-                catch (Exception ex)
-                {
-                    DebugWindow.LogError($"Check filters error: {ex}");
+                        if (filter.CompareItem(itemData, subFilter.CompiledQuery)) 
+                            return new FilterResult(filter, subFilter, itemData, clickPos);
+                    }
+                    catch (Exception ex)
+                    {
+                        DebugWindow.LogError($"Check filters error: {ex}");
+                    }
                 }
             }
             return null;
@@ -727,34 +705,11 @@ namespace Stashie
                 _coroutineIteration++;
                 _coroutineWorker?.UpdateTicks(_coroutineIteration);
                 var maxTryTime = _debugTimer.ElapsedMilliseconds + 2000;
+
                 //move to correct tab
                 if (!stashresult.SkipSwitchTab)
                     yield return SwitchToTab(stashresult.StashIndex);
-                //this is shenanigans for items that take some time to get dumped like maps into maptab and divcards in divtab
-                /*
-                var waited = waitedItems.Count > 0;
-                while (waited)
-                {
-                    waited = false;
-                    var visibleInventoryItems = GameController.Game.IngameState.IngameUi
-                                .InventoryPanel[InventoryIndex.PlayerInventory]
-                                .VisibleInventoryItems;
-                    foreach(var item in waitedItems)
-                    {
-                        if (!visibleInventoryItems.Contains(item.ItemData.InventoryItem)) continue;
-                        yield return ClickElement(item.ClickPos);
-                        waited = true;
-                    }
-                    yield return new WaitTime(Settings.ExtraDelay);
-                    PublishEvent("stashie_finish_drop_items_to_stash_tab", null);
-                    if (!waited) waitedItems.Clear();
-                    if (_debugTimer.ElapsedMilliseconds > maxTryTime)
-                    {
-                        LogMessage($"Error while waiting for:{waitedItems.Count} items");
-                        yield break;
-                    }
-                    yield return new WaitTime((int)GameController.IngameState.CurLatency); //maybe replace with Setting option
-                }*/
+
                 yield return new WaitFunctionTimed(() => GameController.IngameState.IngameUi.StashElement.AllInventories[_visibleStashIndex] != null,
                     true, 2000, $"Error while loading tab, Index: {_visibleStashIndex}"); //maybe replace waittime with Setting option
                 yield return new WaitFunctionTimed(() => GetTypeOfCurrentVisibleStash() != InventoryType.InvalidInventory,
@@ -771,38 +726,6 @@ namespace Stashie
         {
             Input.SetCursorPos(stashresult.ClickPos + _clickWindowOffset);
             yield return new WaitTime(Settings.HoverItemDelay);
-            /*
-           //set cursor and update hoveritem
-           yield return Settings.HoverItemDelay;
-
-           var inventory = GameController.IngameState.IngameUi.InventoryPanel[InventoryIndex.PlayerInventory];
-           while (inventory.HoverItem == null)
-           {
-               if (_debugTimer.ElapsedMilliseconds > maxTryTime)
-               {
-                   LogMessage($"Error while waiting for hover item. hoveritem is null, Index: {_visibleStashIndex}");
-                   yield break;
-               }
-               Input.SetCursorPos(stashresult.ClickPos + _clickWindowOffset);
-               yield return Settings.HoverItemDelay;
-           }
-           if (lastHoverItem != null)
-           {
-               while (inventory.HoverItem == null || inventory.HoverItem.Address == lastHoverItem.Address)
-               {
-                   if (_debugTimer.ElapsedMilliseconds > maxTryTime)
-                   {
-                       LogMessage($"Error while waiting for hover item. hoveritem is null, Index: {_visibleStashIndex}");
-                       yield break;
-                   }
-                   Input.SetCursorPos(stashresult.ClickPos + _clickWindowOffset);
-                   yield return Settings.HoverItemDelay;
-               }
-           }
-           lastHoverItem = inventory.HoverItem;
-           */
-            //finally press the button
-            //additional shift to circumvent affinities
             bool shiftused = false;
             if (stashresult.ShiftForStashing)
             {
@@ -817,258 +740,6 @@ namespace Stashie
 
             yield return new WaitTime(Settings.StashItemDelay);
         }
-        #region Refill
-
-        private IEnumerator ProcessRefills()
-        {
-            if (!Settings.RefillCurrency.Value || _customRefills.Count == 0) yield break;
-
-            if (Settings.CurrencyStashTab.Index == -1)
-            {
-                LogError("Can't process refill: CurrencyStashTab is not set.", 5);
-                yield break;
-            }
-
-            var delay = (int)GameController.Game.IngameState.ServerData.Latency + Settings.ExtraDelay.Value;
-            var currencyTabVisible = false;
-            var inventory = GameController.Game.IngameState.IngameUi.InventoryPanel[InventoryIndex.PlayerInventory];
-            var stashItems = inventory.VisibleInventoryItems;
-
-            if (stashItems == null)
-            {
-                LogError("Can't process refill: VisibleInventoryItems is null!", 5);
-                yield break;
-            }
-
-            _customRefills.ForEach(x => x.Clear());
-            var filledCells = new int[5, 12];
-
-            foreach (var inventItem in stashItems)
-            {
-                var item = inventItem.Item;
-                if (item == null) continue;
-
-                if (!Settings.AllowHaveMore.Value)
-                {
-                    var iPosX = inventItem.InventPosX;
-                    var iPosY = inventItem.InventPosY;
-                    var iBase = item.GetComponent<Base>();
-
-                    for (var x = iPosX; x <= iPosX + iBase.ItemCellsSizeX - 1; x++)
-                        for (var y = iPosY; y <= iPosY + iBase.ItemCellsSizeY - 1; y++)
-                            if (x >= 0 && x <= 11 && y >= 0 && y <= 4)
-                                filledCells[y, x] = 1;
-                            else
-                                LogMessage($"Out of range: {x} {y}", 10);
-                }
-
-                if (!item.HasComponent<ExileCore.PoEMemory.Components.Stack>()) continue;
-
-                foreach (var refill in _customRefills)
-                {
-                    var bit = GameController.Files.BaseItemTypes.Translate(item.Path);
-                    if (bit.BaseName != refill.CurrencyClass) continue;
-
-                    var stack = item.GetComponent<ExileCore.PoEMemory.Components.Stack>();
-                    refill.OwnedCount = stack.Size;
-                    refill.ClickPos = inventItem.GetClientRect().Center;
-
-                    if (refill.OwnedCount < 0 || refill.OwnedCount > 40)
-                    {
-                        LogError(
-                            $"Ignoring refill: {refill.CurrencyClass}: Stack size {refill.OwnedCount} not in range 0-40 ",
-                            5);
-                        refill.OwnedCount = -1;
-                    }
-
-                    break;
-                }
-            }
-
-            var inventoryRec = inventory.InventoryUIElement.GetClientRect();
-            var cellSize = inventoryRec.Width / 12;
-            var freeCellFound = false;
-            var freeCelPos = new Point();
-
-            if (!Settings.AllowHaveMore.Value)
-                for (var x = 0; x <= 11; x++)
-                {
-                    for (var y = 0; y <= 4; y++)
-                    {
-                        if (filledCells[y, x] != 0) continue;
-
-                        freeCellFound = true;
-                        freeCelPos = new Point(x, y);
-                        break;
-                    }
-
-                    if (freeCellFound) break;
-                }
-
-            foreach (var refill in _customRefills)
-            {
-                if (refill.OwnedCount == -1) continue;
-
-                if (refill.OwnedCount == refill.AmountOption.Value) continue;
-
-                if (refill.OwnedCount < refill.AmountOption.Value)
-
-                #region Refill
-
-                {
-                    if (!currencyTabVisible)
-                    {
-                        if (Settings.CurrencyStashTab.Index != _visibleStashIndex)
-                        {
-                            yield return SwitchToTab(Settings.CurrencyStashTab.Index);
-                        }
-                        else
-                        {
-                            currencyTabVisible = true;
-                            yield return new WaitTime(delay);
-                        }
-                    }
-
-                    var moveCount = refill.AmountOption.Value - refill.OwnedCount;
-                    var currentStashItems = GameController.Game.IngameState.IngameUi.StashElement.VisibleStash
-                        .VisibleInventoryItems;
-
-                    var foundSourceOfRefill = currentStashItems
-                        .Where(x => GameController.Files.BaseItemTypes.Translate(x.Item.Path).BaseName ==
-                                    refill.CurrencyClass).ToList();
-
-                    foreach (var sourceOfRefill in foundSourceOfRefill)
-                    {
-                        var stackSize = sourceOfRefill.Item.GetComponent<ExileCore.PoEMemory.Components.Stack>().Size;
-                        var getCurCount = moveCount > stackSize ? stackSize : moveCount;
-                        var destination = refill.ClickPos;
-
-                        if (refill.OwnedCount == 0)
-                        {
-                            destination = GetInventoryClickPosByCellIndex(inventory, refill.InventPos.X,
-                                refill.InventPos.Y, cellSize);
-
-                            // If cells is not free then continue.
-                            if (GameController.Game.IngameState.IngameUi.InventoryPanel[InventoryIndex.PlayerInventory][
-                                refill.InventPos.X, refill.InventPos.Y, 12] != null)
-                            {
-                                moveCount--;
-                                LogMessage(
-                                    $"Inventory ({refill.InventPos.X}, {refill.InventPos.Y}) is occupied by the wrong item!",
-                                    5);
-                                continue;
-                            }
-                        }
-
-                        yield return SplitStack(moveCount, sourceOfRefill.GetClientRect().Center, destination);
-                        moveCount -= getCurCount;
-                        if (moveCount == 0) break;
-                    }
-
-                    if (moveCount > 0)
-                        LogMessage($"Not enough currency (need {moveCount} more) to fill {refill.CurrencyClass} stack",
-                            5);
-                }
-
-                #endregion
-
-                else if (!Settings.AllowHaveMore.Value && refill.OwnedCount > refill.AmountOption.Value)
-
-                #region Devastate
-
-                {
-                    if (!freeCellFound)
-                    {
-                        LogMessage("Can\'t find free cell in player inventory to move excess currency.", 5);
-                        continue;
-                    }
-
-                    if (!currencyTabVisible)
-                    {
-                        if (Settings.CurrencyStashTab.Index != _visibleStashIndex)
-                        {
-                            yield return SwitchToTab(Settings.CurrencyStashTab.Index);
-                            continue;
-                        }
-
-                        currencyTabVisible = true;
-                        yield return new WaitTime(delay);
-                    }
-
-                    var destination = GetInventoryClickPosByCellIndex(inventory, freeCelPos.X, freeCelPos.Y, cellSize) +
-                                      _clickWindowOffset;
-                    var moveCount = refill.OwnedCount - refill.AmountOption.Value;
-                    yield return new WaitTime(delay);
-                    yield return SplitStack(moveCount, refill.ClickPos, destination);
-                    yield return new WaitTime(delay);
-                    Input.KeyDown(Keys.LControlKey);
-
-                    yield return Input.SetCursorPositionSmooth(destination + _clickWindowOffset);
-                    yield return new WaitTime(Settings.ExtraDelay);
-                    Input.Click(MouseButtons.Left);
-                    Input.MouseMove();
-                    Input.KeyUp(Keys.LControlKey);
-                    yield return new WaitTime(delay);
-                }
-
-                #endregion
-            }
-        }
-
-        private static Vector2 GetInventoryClickPosByCellIndex(Inventory inventory, int indexX, int indexY,
-            float cellSize)
-        {
-            return inventory.InventoryUIElement.GetClientRect().TopLeft +
-                   new Vector2(cellSize * (indexX + 0.5f), cellSize * (indexY + 0.5f));
-        }
-
-        private IEnumerator SplitStack(int amount, Vector2 from, Vector2 to)
-        {
-            var delay = (int)GameController.Game.IngameState.ServerData.Latency * 2 + Settings.ExtraDelay;
-            Input.KeyDown(Keys.ShiftKey);
-
-            while (!Input.IsKeyDown(Keys.ShiftKey)) yield return new WaitTime(WhileDelay);
-
-            yield return Input.SetCursorPositionSmooth(from + _clickWindowOffset);
-            yield return new WaitTime(Settings.ExtraDelay);
-            Input.Click(MouseButtons.Left);
-            Input.MouseMove();
-            yield return new WaitTime(InputDelay);
-            Input.KeyUp(Keys.ShiftKey);
-            yield return new WaitTime(InputDelay + 50);
-
-            if (amount > 40)
-            {
-                LogMessage("Can't select amount more than 40, current value: " + amount, 5);
-                amount = 40;
-            }
-
-            if (amount < 10)
-            {
-                var keyToPress = (int)Keys.D0 + amount;
-                yield return Input.KeyPress((Keys)keyToPress);
-            }
-            else
-            {
-                var keyToPress = (int)Keys.D0 + amount / 10;
-                yield return Input.KeyPress((Keys)keyToPress);
-                yield return new WaitTime(delay);
-                keyToPress = (int)Keys.D0 + amount % 10;
-                yield return Input.KeyPress((Keys)keyToPress);
-            }
-
-            yield return new WaitTime(delay);
-            yield return Input.KeyPress(Keys.Enter);
-            yield return new WaitTime(delay + InputDelay);
-
-            yield return Input.SetCursorPositionSmooth(to + _clickWindowOffset);
-            yield return new WaitTime(Settings.ExtraDelay);
-            Input.Click(MouseButtons.Left);
-
-            yield return new WaitTime(delay + InputDelay);
-        }
-
-        #endregion
 
         #region Switching between StashTabs
 
@@ -1117,7 +788,7 @@ namespace Stashie
             }
         }
 
-        private IEnumerator PressKey(Keys key, int repetitions = 1)
+        private static IEnumerator PressKey(Keys key, int repetitions = 1)
         {
             for (var i = 0; i < repetitions; i++)
             {
@@ -1133,7 +804,7 @@ namespace Stashie
         private IEnumerator OpenDropDownMenu()
         {
             var button = GameController.Game.IngameState.IngameUi.StashElement.ViewAllStashButton.GetClientRect();
-            yield return ClickElement(button.Center);
+            yield return ClickElement(button.Center.ToVector2Num());
             while (!DropDownMenuIsVisible())
             {
                 yield return Delay(1);
@@ -1165,7 +836,7 @@ namespace Stashie
             // 31 + 45 - 44 = 30
             // MaxShownSideBarStashTabs + _stashCount - tabIndex = index
             var index = clickable ? tabIndex : tabIndex - (_stashCount - 1 - (MaxShownSidebarStashTabs - 1));
-            var pos = stashTabLabels.GetChildAtIndex(index).GetClientRect().Center;
+            var pos = stashTabLabels.GetChildAtIndex(index).GetClientRect().Center.ToVector2Num();
             MoveMouseToElement(pos);
             if (SliderPresent())
             {
@@ -1179,7 +850,7 @@ namespace Stashie
             yield return Click();
         }
 
-        private IEnumerator ClickElement(Vector2 pos, MouseButtons mouseButton = MouseButtons.Left)
+        private IEnumerator ClickElement(Vector2N pos, MouseButtons mouseButton = MouseButtons.Left)
         {
             MoveMouseToElement(pos);
             yield return Click(mouseButton);
@@ -1191,9 +862,9 @@ namespace Stashie
             yield return Delay();
         }
 
-        private void MoveMouseToElement(Vector2 pos)
+        private void MoveMouseToElement(Vector2N pos)
         {
-            Input.SetCursorPos(pos + GameController.Window.GetWindowRectangle().TopLeft);
+            Input.SetCursorPos(pos + GameController.Window.GetWindowRectangle().TopLeft.ToVector2Num());
         }
 
         private IEnumerator Delay(int ms = 0)
