@@ -620,7 +620,7 @@ namespace Stashie
                 if (invItem.Item == null || invItem.Address == 0) continue;
                 if (CheckIgnoreCells(invItem)) continue;
 
-                var testItem = new ItemData(invItem.Item, GameController.Files);
+                var testItem = new ItemData(invItem.Item, GameController);
                 var result = CheckFilters(testItem, CalculateClickPos(invItem));
                 if (result != null)
                     _dropItems.Add(result);
