@@ -257,7 +257,6 @@ namespace Stashie
                         for (var x = 0; x < itemSizeX; x++)
                             Settings.IgnoredExpandedCells[y + inventPosY, x + inventPosX] = 1;
                 }
-
             }
             catch (Exception e)
             {
@@ -513,7 +512,6 @@ namespace Stashie
                     _dropItems.Add(result);
             }
 
-
             if (GameController.IngameState.IngameUi.InventoryPanel[InventoryIndex.PlayerExpandedInventory].IsVisible)
             {
                 var expandedinvItems = _serverData.PlayerInventories[(int)InventorySlotE.ExpandedMainInventory1].Inventory.InventorySlotItems;
@@ -532,7 +530,7 @@ namespace Stashie
         }
 
         public RectangleF GetExpenadedClientRect(InventSlotItem item)
-            {
+        {
             var playerInventElement = GameController.IngameState.IngameUi.InventoryPanel[InventoryIndex.PlayerExpandedInventory];
             var inventClientRect = playerInventElement.GetClientRect();
             var cellSize = inventClientRect.Width / 4;

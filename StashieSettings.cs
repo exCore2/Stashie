@@ -19,7 +19,6 @@ namespace Stashie
             HoverItemDelay = new RangeNode<int>(5, 0, 2000);
             StashItemDelay = new RangeNode<int>(5, 0, 2000);
             BlockInput = new ToggleNode(false);
-            CurrencyStashTab = new ListIndexNode();
             CustomFilterOptions = [];
             VisitTabWhenDone = new ToggleNode(false);
             TabToVisitWhenDone = new RangeNode<int>(0, 0, 40);
@@ -53,8 +52,6 @@ namespace Stashie
 
         [Menu("Go back to the tab you were in prior to Stashing")]
         public ToggleNode BackToOriginalTab { get; set; }
-
-        public ListIndexNode CurrencyStashTab { get; set; }
 
         public ToggleNode Enable { get; set; }
 
