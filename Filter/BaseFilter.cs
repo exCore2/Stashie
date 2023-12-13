@@ -1,5 +1,4 @@
 ﻿using ItemFilterLibrary;
-using System.Collections.Generic;
 
 namespace Stashie
 {

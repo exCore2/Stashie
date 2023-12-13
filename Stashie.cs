@@ -3,7 +3,6 @@ using ExileCore.PoEMemory.Components;
 using ExileCore.Shared;
 using ExileCore.Shared.Enums;
 using ExileCore.Shared.Helpers;
-using ExileCore.Shared.Nodes;
 using ImGuiNET;
 using ItemFilterLibrary;
 using SharpDX;
@@ -24,10 +23,9 @@ namespace Stashie
     {
         private const string StashTabsNameChecker = "Stash Tabs Name Checker";
         private const string CoroutineName = "Drop To Stash";
-        private readonly Stopwatch _debugTimer = new Stopwatch();
+        private readonly Stopwatch _debugTimer = new();
         private Vector2N _clickWindowOffset;
         private List<CustomFilter> currentFilter;
-        private List<RefillProcessor> _customRefills;
         private List<FilterResult> _dropItems;
         private List<ListIndexNode> _settingsListNodes;
         private uint _coroutineIteration;
@@ -41,7 +39,7 @@ namespace Stashie
 
         public StashieCore()
         {
-            Name = "Stashie (JSON) With Linq";
+            Name = "Stashie With Linq";
         }
 
         public override void ReceiveEvent(string eventId, object args)
@@ -56,6 +54,7 @@ namespace Stashie
                 case "switch_to_tab":
                     HandleSwitchToTabEvent(args);
                     break;
+
                 default:
                     break;
             }
@@ -68,6 +67,7 @@ namespace Stashie
                 case int index:
                     _coroutineWorker = new Coroutine(ProcessSwitchToTab(index), this, CoroutineName);
                     break;
+
                 case string name:
                     if (!_renamedAllStashNames.Contains(name))
                     {
@@ -79,6 +79,7 @@ namespace Stashie
                     _coroutineWorker = new Coroutine(ProcessSwitchToTab(tempIndex), this, CoroutineName);
                     DebugWindow.LogMsg($"{Name}: Switching to tab with index: {tempIndex} ('{name}').");
                     break;
+
                 default:
                     DebugWindow.LogMsg("The received argument is not a string or an integer.");
                     break;
@@ -122,16 +123,14 @@ namespace Stashie
             if (_stashTabNamesCoroutine.Running)
             {
                 if (!area.IsHideout && !area.IsTown &&
-                    !area.DisplayName.Contains("Azurite Mine") &&
-                    !area.DisplayName.Contains("Tane's Laboratory"))
+                    !area.DisplayName.Contains("Azurite Mine"))
                     _stashTabNamesCoroutine?.Pause();
             }
             else
             {
                 if (area.IsHideout ||
                     area.IsTown ||
-                    area.DisplayName.Contains("Azurite Mine") ||
-                    area.DisplayName.Contains("Tane's Laboratory"))
+                    area.DisplayName.Contains("Azurite Mine"))
                     _stashTabNamesCoroutine?.Resume();
             }
         }
@@ -159,14 +158,6 @@ namespace Stashie
             DrawIgnoredCellsSettings();
             base.DrawSettings();
 
-            foreach (var settingsCustomRefillOption in Settings.CustomRefillOptions)
-            {
-                var value = settingsCustomRefillOption.Value.Value;
-                ImGui.SliderInt(settingsCustomRefillOption.Key, ref value, settingsCustomRefillOption.Value.Min,
-                    settingsCustomRefillOption.Value.Max);
-                settingsCustomRefillOption.Value.Value = value;
-            }
-
             _filterTabs?.Invoke();
         }
 
@@ -182,7 +173,7 @@ namespace Stashie
 
             var dirInfo = new DirectoryInfo(pickitConfigFileDirectory);
             Settings.FilterFile.Values = dirInfo.GetFiles("*.ifl").Select(x => Path.GetFileNameWithoutExtension(x.Name)).ToList();
-            if (Settings.FilterFile.Values.Any() && !Settings.FilterFile.Values.Contains(Settings.FilterFile.Value))
+            if (Settings.FilterFile.Values.Count != 0 && !Settings.FilterFile.Values.Contains(Settings.FilterFile.Value))
             {
                 Settings.FilterFile.Value = Settings.FilterFile.Values.First();
             }
@@ -198,11 +189,10 @@ namespace Stashie
                     {
                         foreach (var filter in customFilter.Filters)
                         {
-                            if (!Settings.CustomFilterOptions.TryGetValue(customFilter.ParentMenuName+filter.FilterName, out var indexNodeS))
+                            if (!Settings.CustomFilterOptions.TryGetValue(customFilter.ParentMenuName + filter.FilterName, out var indexNodeS))
                             {
                                 indexNodeS = new ListIndexNode { Value = "Ignore", Index = -1 };
                                 Settings.CustomFilterOptions.Add(customFilter.ParentMenuName + filter.FilterName, indexNodeS);
-
                             }
                             filter.StashIndexNode = indexNodeS;
                             _settingsListNodes.Add(indexNodeS);
@@ -291,7 +281,7 @@ namespace Stashie
 
         private void GenerateMenu()
         {
-            _stashTabNamesByIndex = _renamedAllStashNames.ToArray();
+            _stashTabNamesByIndex = [.. _renamedAllStashNames];
 
             _filterTabs = null;
 
@@ -301,7 +291,7 @@ namespace Stashie
                     ImGui.TextColored(new Vector4(0f, 1f, 0.022f, 1f), parent.ParentMenuName);
 
                     foreach (var filter in parent.Filters)
-                        if (Settings.CustomFilterOptions.TryGetValue(parent.ParentMenuName+filter.FilterName, out var indexNode))
+                        if (Settings.CustomFilterOptions.TryGetValue(parent.ParentMenuName + filter.FilterName, out var indexNode))
                         {
                             var formattableString = $"{filter.FilterName}##{parent.ParentMenuName + filter.FilterName}";
 
@@ -365,26 +355,6 @@ namespace Stashie
                 };
         }
 
-        private void LoadCustomRefills()
-        {
-            _customRefills = RefillParser.Parse(ConfigDirectory);
-            if (_customRefills.Count == 0) return;
-
-            foreach (var refill in _customRefills)
-            {
-                if (!Settings.CustomRefillOptions.TryGetValue(refill.MenuName, out var amountOption))
-                {
-                    amountOption = new RangeNode<int>(15, 0, refill.StackSize);
-                    Settings.CustomRefillOptions.Add(refill.MenuName, amountOption);
-                }
-
-                amountOption.Max = refill.StackSize;
-                refill.AmountOption = amountOption;
-            }
-
-            _settingsListNodes.Add(Settings.CurrencyStashTab);
-        }
-
         public override Job Tick()
         {
             if (!StashingRequirementsMet() && Core.ParallelRunner.FindByName("Stashie_DropItemsToStash") != null)
@@ -422,6 +392,7 @@ namespace Stashie
             _debugTimer.Reset();
             CleanUp();
         }
+
         private IEnumerator DropToStashRoutine()
         {
             var cursorPosPreMoving = Input.ForceMousePositionNum; //saving cursorposition
@@ -483,7 +454,7 @@ namespace Stashie
             var invItems = inventory.InventorySlotItems;
 
             yield return new WaitFunctionTimed(() => invItems != null, true, 500, "ServerInventory->InventSlotItems is null!");
-            _dropItems = new List<FilterResult>();
+            _dropItems = [];
             _clickWindowOffset = GameController.Window.GetWindowRectangle().TopLeft.ToVector2Num();
             foreach (var invItem in invItems)
             {
@@ -496,6 +467,7 @@ namespace Stashie
                     _dropItems.Add(result);
             }
         }
+
         private Vector2N CalculateClickPos(InventSlotItem invItem)
         {
             //hacky clickpos calc work
@@ -518,10 +490,6 @@ namespace Stashie
             var inventPosX = inventItem.PosX;
             var inventPosY = inventItem.PosY;
 
-            if (Settings.RefillCurrency &&
-                _customRefills.Any(x => x.InventPos.X == inventPosX && x.InventPos.Y == inventPosY))
-                return true;
-
             if (inventPosX < 0 || inventPosX >= 12) return true;
 
             if (inventPosY < 0 || inventPosY >= 5) return true;
@@ -533,13 +501,13 @@ namespace Stashie
         {
             foreach (var filter in currentFilter)
             {
-                foreach ( var subFilter in filter.Filters)
+                foreach (var subFilter in filter.Filters)
                 {
                     try
                     {
                         if (!subFilter.AllowProcess) continue;
 
-                        if (filter.CompareItem(itemData, subFilter.CompiledQuery)) 
+                        if (filter.CompareItem(itemData, subFilter.CompiledQuery))
                             return new FilterResult(subFilter, itemData, clickPos);
                     }
                     catch (Exception ex)
@@ -557,6 +525,7 @@ namespace Stashie
 
             yield return StashItems();
         }
+
         private IEnumerator StashItems()
         {
             PublishEvent("stashie_start_drop_items", null);
@@ -624,10 +593,7 @@ namespace Stashie
             var travelDistance = Math.Abs(tabIndex - _visibleStashIndex);
             if (travelDistance == 0) yield break;
 
-            if (Settings.AlwaysUseArrow.Value || travelDistance < 2 || !SliderPresent())
-                yield return SwitchToTabViaArrowKeys(tabIndex);
-            else
-                yield return SwitchToTabViaDropdownMenu(tabIndex);
+            yield return SwitchToTabViaArrowKeys(tabIndex);
 
             yield return Delay();
         }
@@ -693,35 +659,6 @@ namespace Stashie
             return _stashCount > MaxShownSidebarStashTabs;
         }
 
-        private IEnumerator ClickDropDownMenuStashTabLabel(int tabIndex)
-        {
-            var dropdownMenu = GameController.Game.IngameState.IngameUi.StashElement.ViewAllStashPanel;
-            var stashTabLabels = dropdownMenu.GetChildAtIndex(1);
-
-            //if the stash tab index we want to visit is less or equal to 30, then we scroll all the way to the top.
-            //scroll amount (clicks) should always be (stash_tab_count - 31);
-            //TODO(if the guy has more than 31*2 tabs and wants to visit stash tab 32 fx, then we need to scroll all the way up (or down) and then scroll 13 clicks after.)
-
-            var clickable = StashLabelIsClickable(tabIndex);
-            // we want to go to stash 32 (index 31).
-            // 44 - 31 = 13
-            // 31 + 45 - 44 = 30
-            // MaxShownSideBarStashTabs + _stashCount - tabIndex = index
-            var index = clickable ? tabIndex : tabIndex - (_stashCount - 1 - (MaxShownSidebarStashTabs - 1));
-            var pos = stashTabLabels.GetChildAtIndex(index).GetClientRect().Center.ToVector2Num();
-            MoveMouseToElement(pos);
-            if (SliderPresent())
-            {
-                var clicks = _stashCount - MaxShownSidebarStashTabs;
-                yield return Delay(3);
-                VerticalScroll(scrollUp: clickable, clicks: clicks);
-                yield return Delay(3);
-            }
-
-            DebugWindow.LogMsg($"Stashie: Moving to tab '{tabIndex}'.", 3, Color.LightGray);
-            yield return Click();
-        }
-
         private IEnumerator ClickElement(Vector2N pos, MouseButtons mouseButton = MouseButtons.Left)
         {
             MoveMouseToElement(pos);
@@ -744,16 +681,6 @@ namespace Stashie
             yield return new WaitTime(Settings.ExtraDelay.Value + ms);
         }
 
-        private IEnumerator SwitchToTabViaDropdownMenu(int tabIndex)
-        {
-            if (!DropDownMenuIsVisible())
-            {
-                yield return OpenDropDownMenu();
-            }
-
-            yield return ClickDropDownMenuStashTabLabel(tabIndex);
-        }
-
         private int GetIndexOfCurrentVisibleTab()
         {
             return GameController.Game.IngameState.IngameUi.StashElement.IndexVisibleStash;
@@ -765,7 +692,7 @@ namespace Stashie
             return stashPanelVisibleStash?.InvType ?? InventoryType.InvalidInventory;
         }
 
-        #endregion
+        #endregion Switching between StashTabs
 
         #region Stashes update
 
@@ -774,15 +701,10 @@ namespace Stashie
             node.Index = GetInventIndexByStashName(newValue);
         }
 
-        public override void OnClose()
-        {
-        }
-
         private void SetupOrClose()
         {
             SaveDefaultConfigsToDisk();
             _settingsListNodes = new List<ListIndexNode>(100);
-            LoadCustomRefills();
             LoadCustomFilters();
 
             try
@@ -810,7 +732,7 @@ namespace Stashie
 
         private void UpdateStashNames(ICollection<string> newNames)
         {
-            Settings.AllStashNames = newNames.ToList();
+            Settings.AllStashNames = [.. newNames];
 
             if (newNames.Count < 4)
             {
@@ -818,7 +740,7 @@ namespace Stashie
                 return;
             }
 
-            _renamedAllStashNames = new List<string> { "Ignore" };
+            _renamedAllStashNames = ["Ignore"];
             var settingsAllStashNames = Settings.AllStashNames;
 
             for (var i = 0; i < settingsAllStashNames.Count; i++)
@@ -888,8 +810,8 @@ namespace Stashie
             GenerateMenu();
         }
 
-        private static readonly WaitTime Wait2Sec = new WaitTime(2000);
-        private static readonly WaitTime Wait1Sec = new WaitTime(1000);
+        private static readonly WaitTime Wait2Sec = new(2000);
+        private static readonly WaitTime Wait1Sec = new(1000);
         private uint _counterStashTabNamesCoroutine;
 
         public IEnumerator StashTabNamesUpdater_Thread()
@@ -926,15 +848,6 @@ namespace Stashie
             }
         }
 
-        private static void VerticalScroll(bool scrollUp, int clicks)
-        {
-            const int wheelDelta = 120;
-            if (scrollUp)
-                WinApi.mouse_event(Input.MOUSE_EVENT_WHEEL, 0, 0, clicks * wheelDelta, 0);
-            else
-                WinApi.mouse_event(Input.MOUSE_EVENT_WHEEL, 0, 0, -(clicks * wheelDelta), 0);
-        }
-
-        #endregion
+        #endregion Stashes update
     }
 }

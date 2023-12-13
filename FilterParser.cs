@@ -1,9 +1,9 @@
 ﻿using ExileCore;
+using ItemFilterLibrary;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using ItemFilterLibrary;
-using Newtonsoft.Json;
 
 namespace Stashie
 {
@@ -32,10 +32,9 @@ namespace Stashie
             public bool? Affinity { get; set; }
         }
 
-
         public static List<CustomFilter> Load(string fileName, string filePath)
         {
-            List<CustomFilter> allFilters = new List<CustomFilter>();
+            List<CustomFilter> allFilters = [];
 
             try
             {
@@ -53,7 +52,6 @@ namespace Stashie
 
                     for (int j = 0; j < newFilters.ParentMenu[i].Filters.Count; j++)
                     {
-
                         var compiledQuery = ItemQuery.Load(string.Join("", newFilters.ParentMenu[i].Filters[j].RawQuery).Replace("\n", ""));
 
                         // Check if there was an error during processing and set the flag accordingly
@@ -75,7 +73,7 @@ namespace Stashie
                                 CompiledQuery = compiledQuery,
                             });
                         }
-                        newFilter ++;
+                        newFilter++;
                     }
                     if (newParent.Filters.Count > 0)
                         allFilters.Add(newParent);
