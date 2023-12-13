@@ -18,7 +18,6 @@ namespace Stashie
             ExtraDelay = new RangeNode<int>(0, 0, 2000);
             HoverItemDelay = new RangeNode<int>(5, 0, 2000);
             StashItemDelay = new RangeNode<int>(5, 0, 2000);
-            BlockInput = new ToggleNode(false);
             CustomFilterOptions = [];
             VisitTabWhenDone = new ToggleNode(false);
             TabToVisitWhenDone = new RangeNode<int>(0, 0, 40);
@@ -39,9 +38,6 @@ namespace Stashie
 
         [Menu("StashItem Delay", "Delay used to wait after moving the mouse on an item to Stash until clicking it(in ms).")]
         public RangeNode<int> StashItemDelay { get; set; }
-
-        [Menu("Block Input", "Block user input (except: Ctrl+Alt+Delete) when dropping items to stash.")]
-        public ToggleNode BlockInput { get; set; }
 
         [Menu("When done, go to tab.",
             "After Stashie has dropped all items to their respective tabs, then go to the set tab.")]

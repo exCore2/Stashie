@@ -15,7 +15,6 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using static ExileCore.PoEMemory.MemoryObjects.ServerInventory;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 using Vector2N = System.Numerics.Vector2;
 using Vector4 = System.Numerics.Vector4;
 
@@ -39,10 +38,7 @@ namespace Stashie
         private const int MaxShownSidebarStashTabs = 31;
         private int _stashCount;
 
-        public StashieCore()
-        {
-            Name = "Stashie With Linq";
-        }
+        public StashieCore() => Name = "Stashie With Linq";
 
         public override void ReceiveEvent(string eventId, object args)
         {
@@ -230,37 +226,32 @@ namespace Stashie
             };
             try
             {
+                // Player Inventory
                 var inventory_server = GameController.IngameState.Data.ServerData.PlayerInventories[(int)InventorySlotE.MainInventory1];
+                UpdateIgnoredCells(inventory_server, Settings.IgnoredExpandedCells);
 
-                foreach (var item in inventory_server.Inventory.InventorySlotItems)
-                {
-                    var baseC = item.Item.GetComponent<Base>();
-                    var itemSizeX = baseC.ItemCellsSizeX;
-                    var itemSizeY = baseC.ItemCellsSizeY;
-                    var inventPosX = item.PosX;
-                    var inventPosY = item.PosY;
-                    for (var y = 0; y < itemSizeY; y++)
-                        for (var x = 0; x < itemSizeX; x++)
-                            Settings.IgnoredCells[y + inventPosY, x + inventPosX] = 1;
-                }
-
+                // Afflication Rucksack
                 var backpack_server = GameController.IngameState.Data.ServerData.PlayerInventories[(int)InventorySlotE.ExpandedMainInventory1];
-
-                foreach (var item in backpack_server.Inventory.InventorySlotItems)
-                {
-                    var baseC = item.Item.GetComponent<Base>();
-                    var itemSizeX = baseC.ItemCellsSizeX;
-                    var itemSizeY = baseC.ItemCellsSizeY;
-                    var inventPosX = item.PosX;
-                    var inventPosY = item.PosY;
-                    for (var y = 0; y < itemSizeY; y++)
-                        for (var x = 0; x < itemSizeX; x++)
-                            Settings.IgnoredExpandedCells[y + inventPosY, x + inventPosX] = 1;
-                }
+                UpdateIgnoredCells(backpack_server, Settings.IgnoredExpandedCells);
             }
             catch (Exception e)
             {
                 LogError($"{e}", 5);
+            }
+
+            void UpdateIgnoredCells(InventoryHolder server_items, int[,] ignoredCells)
+            {
+                foreach (var item in server_items.Inventory.InventorySlotItems)
+                {
+                    var baseC = item.Item.GetComponent<Base>();
+                    var itemSizeX = baseC.ItemCellsSizeX;
+                    var itemSizeY = baseC.ItemCellsSizeY;
+                    var inventPosX = item.PosX;
+                    var inventPosY = item.PosY;
+                    for (var y = 0; y < itemSizeY; y++)
+                        for (var x = 0; x < itemSizeX; x++)
+                            ignoredCells[y + inventPosY, x + inventPosX] = 1;
+                }
             }
         }
 
@@ -504,7 +495,7 @@ namespace Stashie
             foreach (var invItem in invItems)
             {
                 if (invItem.Item == null || invItem.Address == 0) continue;
-                if (CheckIgnoreCells(invItem)) continue;
+                if (CheckIgnoreCells(invItem, (12, 5), Settings.IgnoredCells)) continue;
 
                 var testItem = new ItemData(invItem.Item, GameController);
                 var result = CheckFilters(testItem, invItem.GetClientRect().Center.ToVector2Num());
@@ -519,7 +510,7 @@ namespace Stashie
                 foreach (var expandedInvItem in expandedinvItems)
                 {
                     if (expandedInvItem.Item == null || expandedInvItem.Address == 0) continue;
-                    if (CheckExpandedIgnoreCells(expandedInvItem)) continue;
+                    if (CheckIgnoreCells(expandedInvItem, (4, 5), Settings.IgnoredExpandedCells)) continue;
 
                     var testItem = new ItemData(expandedInvItem.Item, GameController);
                     var result = CheckFilters(testItem, GetExpenadedClientRect(expandedInvItem).Center.ToVector2Num());
@@ -537,28 +528,16 @@ namespace Stashie
             return item.Location.GetItemRect(inventClientRect.X, inventClientRect.Y, cellSize);
         }
 
-        private bool CheckIgnoreCells(InventSlotItem inventItem)
+        private bool CheckIgnoreCells(InventSlotItem inventItem, (int Width, int Height) containerSize, int[,] ignoredCells)
         {
             var inventPosX = inventItem.PosX;
             var inventPosY = inventItem.PosY;
 
-            if (inventPosX < 0 || inventPosX >= 12) return true;
+            if (inventPosX < 0 || inventPosX >= containerSize.Width) return true;
 
-            if (inventPosY < 0 || inventPosY >= 5) return true;
+            if (inventPosY < 0 || inventPosY >= containerSize.Height) return true;
 
-            return Settings.IgnoredCells[inventPosY, inventPosX] != 0; //No need to check all item size
-        }
-
-        private bool CheckExpandedIgnoreCells(InventSlotItem inventItem)
-        {
-            var inventPosX = inventItem.PosX;
-            var inventPosY = inventItem.PosY;
-
-            if (inventPosX < 0 || inventPosX >= 4) return true;
-
-            if (inventPosY < 0 || inventPosY >= 5) return true;
-
-            return Settings.IgnoredExpandedCells[inventPosY, inventPosX] != 0; //No need to check all item size
+            return ignoredCells[inventPosY, inventPosX] != 0; //No need to check all item size
         }
 
         private FilterResult CheckFilters(ItemData itemData, Vector2N clickPos)
