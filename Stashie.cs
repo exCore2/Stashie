@@ -1,5 +1,6 @@
 ﻿using ExileCore;
 using ExileCore.PoEMemory.Components;
+using ExileCore.PoEMemory.MemoryObjects;
 using ExileCore.Shared;
 using ExileCore.Shared.Enums;
 using ExileCore.Shared.Helpers;
@@ -14,6 +15,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using static ExileCore.PoEMemory.MemoryObjects.ServerInventory;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 using Vector2N = System.Numerics.Vector2;
 using Vector4 = System.Numerics.Vector4;
 
@@ -217,9 +219,18 @@ namespace Stashie
                 {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
                 {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
             };
+
+            Settings.IgnoredExpandedCells = new[,]
+            {
+                {0, 0, 0, 0},
+                {0, 0, 0, 0},
+                {0, 0, 0, 0},
+                {0, 0, 0, 0},
+                {0, 0, 0, 0}
+            };
             try
             {
-                var inventory_server = GameController.IngameState.Data.ServerData.PlayerInventories[0];
+                var inventory_server = GameController.IngameState.Data.ServerData.PlayerInventories[(int)InventorySlotE.MainInventory1];
 
                 foreach (var item in inventory_server.Inventory.InventorySlotItems)
                 {
@@ -232,6 +243,21 @@ namespace Stashie
                         for (var x = 0; x < itemSizeX; x++)
                             Settings.IgnoredCells[y + inventPosY, x + inventPosX] = 1;
                 }
+
+                var backpack_server = GameController.IngameState.Data.ServerData.PlayerInventories[(int)InventorySlotE.ExpandedMainInventory1];
+
+                foreach (var item in backpack_server.Inventory.InventorySlotItems)
+                {
+                    var baseC = item.Item.GetComponent<Base>();
+                    var itemSizeX = baseC.ItemCellsSizeX;
+                    var itemSizeY = baseC.ItemCellsSizeY;
+                    var inventPosX = item.PosX;
+                    var inventPosY = item.PosY;
+                    for (var y = 0; y < itemSizeY; y++)
+                        for (var x = 0; x < itemSizeX; x++)
+                            Settings.IgnoredExpandedCells[y + inventPosY, x + inventPosX] = 1;
+                }
+
             }
             catch (Exception e)
             {
@@ -266,17 +292,36 @@ namespace Stashie
                 DebugWindow.LogError(e.ToString(), 10);
             }
 
+            ImGui.Columns(2, "", true);
+            ImGui.SetColumnWidth(0, 120);
+
             var numb = 1;
+            for (var i = 0; i < 5; i++)
+                for (var j = 0; j < 4; j++)
+                {
+                    var toggled = Convert.ToBoolean(Settings.IgnoredExpandedCells[i, j]);
+                    if (ImGui.Checkbox($"##{numb}IgnoredBackpackInventoryCells", ref toggled)) Settings.IgnoredExpandedCells[i, j] ^= 1;
+
+                    if ((numb - 1) % 4 < 3) ImGui.SameLine();
+
+                    numb += 1;
+                }
+
+            ImGui.NextColumn();
+            numb = 1;
             for (var i = 0; i < 5; i++)
                 for (var j = 0; j < 12; j++)
                 {
                     var toggled = Convert.ToBoolean(Settings.IgnoredCells[i, j]);
-                    if (ImGui.Checkbox($"##{numb}IgnoredCells", ref toggled)) Settings.IgnoredCells[i, j] ^= 1;
+                    if (ImGui.Checkbox($"##{numb}IgnoredMainInventoryCells", ref toggled)) Settings.IgnoredCells[i, j] ^= 1;
 
                     if ((numb - 1) % 12 < 11) ImGui.SameLine();
 
                     numb += 1;
                 }
+
+            // Settings to 0 breaks normal settings draws, core has 1 column for sliders?
+            ImGui.Columns(1);
         }
 
         private void GenerateMenu()
@@ -450,39 +495,48 @@ namespace Stashie
 
         private IEnumerator ParseItems()
         {
-            var inventory = GameController.Game.IngameState.Data.ServerData.PlayerInventories[0].Inventory;
-            var invItems = inventory.InventorySlotItems;
+            var _serverData = GameController.Game.IngameState.Data.ServerData;
+            var invItems = _serverData.PlayerInventories[0].Inventory.InventorySlotItems;
 
             yield return new WaitFunctionTimed(() => invItems != null, true, 500, "ServerInventory->InventSlotItems is null!");
             _dropItems = [];
             _clickWindowOffset = GameController.Window.GetWindowRectangle().TopLeft.ToVector2Num();
+
             foreach (var invItem in invItems)
             {
                 if (invItem.Item == null || invItem.Address == 0) continue;
                 if (CheckIgnoreCells(invItem)) continue;
 
                 var testItem = new ItemData(invItem.Item, GameController);
-                var result = CheckFilters(testItem, CalculateClickPos(invItem));
+                var result = CheckFilters(testItem, invItem.GetClientRect().Center.ToVector2Num());
                 if (result != null)
                     _dropItems.Add(result);
             }
+
+
+            if (GameController.IngameState.IngameUi.InventoryPanel[InventoryIndex.PlayerExpandedInventory].IsVisible)
+            {
+                var expandedinvItems = _serverData.PlayerInventories[(int)InventorySlotE.ExpandedMainInventory1].Inventory.InventorySlotItems;
+
+                foreach (var expandedInvItem in expandedinvItems)
+                {
+                    if (expandedInvItem.Item == null || expandedInvItem.Address == 0) continue;
+                    if (CheckExpandedIgnoreCells(expandedInvItem)) continue;
+
+                    var testItem = new ItemData(expandedInvItem.Item, GameController);
+                    var result = CheckFilters(testItem, GetExpenadedClientRect(expandedInvItem).Center.ToVector2Num());
+                    if (result != null)
+                        _dropItems.Add(result);
+                }
+            }
         }
 
-        private Vector2N CalculateClickPos(InventSlotItem invItem)
-        {
-            //hacky clickpos calc work
-
-            var InventoryPanelRectF = GameController.IngameState.IngameUi.InventoryPanel[InventoryIndex.PlayerInventory].GetClientRect();
-            var CellWidth = InventoryPanelRectF.Width / 12;
-            var CellHeight = InventoryPanelRectF.Height / 5;
-            var itemInventPosition = invItem.InventoryPositionNum;
-
-            Vector2N clickpos = new Vector2N(
-                InventoryPanelRectF.Location.X + (CellWidth / 2) + (itemInventPosition.X * CellWidth),
-                InventoryPanelRectF.Location.Y + (CellHeight / 2) + (itemInventPosition.Y * CellHeight)
-                );
-
-            return clickpos;
+        public RectangleF GetExpenadedClientRect(InventSlotItem item)
+            {
+            var playerInventElement = GameController.IngameState.IngameUi.InventoryPanel[InventoryIndex.PlayerExpandedInventory];
+            var inventClientRect = playerInventElement.GetClientRect();
+            var cellSize = inventClientRect.Width / 4;
+            return item.Location.GetItemRect(inventClientRect.X, inventClientRect.Y, cellSize);
         }
 
         private bool CheckIgnoreCells(InventSlotItem inventItem)
@@ -495,6 +549,18 @@ namespace Stashie
             if (inventPosY < 0 || inventPosY >= 5) return true;
 
             return Settings.IgnoredCells[inventPosY, inventPosX] != 0; //No need to check all item size
+        }
+
+        private bool CheckExpandedIgnoreCells(InventSlotItem inventItem)
+        {
+            var inventPosX = inventItem.PosX;
+            var inventPosY = inventItem.PosY;
+
+            if (inventPosX < 0 || inventPosX >= 4) return true;
+
+            if (inventPosY < 0 || inventPosY >= 5) return true;
+
+            return Settings.IgnoredExpandedCells[inventPosY, inventPosX] != 0; //No need to check all item size
         }
 
         private FilterResult CheckFilters(ItemData itemData, Vector2N clickPos)
@@ -637,26 +703,6 @@ namespace Stashie
         private bool DropDownMenuIsVisible()
         {
             return GameController.Game.IngameState.IngameUi.StashElement.ViewAllStashPanel.IsVisible;
-        }
-
-        private IEnumerator OpenDropDownMenu()
-        {
-            var button = GameController.Game.IngameState.IngameUi.StashElement.ViewAllStashButton.GetClientRect();
-            yield return ClickElement(button.Center.ToVector2Num());
-            while (!DropDownMenuIsVisible())
-            {
-                yield return Delay(1);
-            }
-        }
-
-        private static bool StashLabelIsClickable(int index)
-        {
-            return index + 1 < MaxShownSidebarStashTabs;
-        }
-
-        private bool SliderPresent()
-        {
-            return _stashCount > MaxShownSidebarStashTabs;
         }
 
         private IEnumerator ClickElement(Vector2N pos, MouseButtons mouseButton = MouseButtons.Left)
