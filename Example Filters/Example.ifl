@@ -5,27 +5,39 @@
       "Filters": [
         {
           "FilterName": "Blight Annointed Items",
-          "RawQuery": [ "FindMods(\"grantedpassive\").Any(Values[0] >= -40000) || FindMods(\"BlightEnchantment\").Any(Values[0] >= -40000)" ]
+          "RawQuery": [
+            "FindMods(\"grantedpassive\").Any(Values[0] >= -40000) || FindMods(\"BlightEnchantment\").Any(Values[0] >= -40000)"
+          ]
         },
         {
           "FilterName": "Convoking Wands [ilvl86]",
-          "RawQuery": [ "BaseName == \"Convoking Wand\" && ItemLevel >= 86" ]
+          "RawQuery": [
+            "BaseName == \"Convoking Wand\" && ItemLevel >= 86"
+          ]
         },
         {
           "FilterName": "Jewels",
-          "RawQuery": [ "ClassName == \"Jewel\"" ]
+          "RawQuery": [
+            "ClassName == \"Jewel\""
+          ]
         },
         {
           "FilterName": "City Square",
-          "RawQuery": [ "IsMap && BaseName == \"City Square Map\" && MapTier == 16 && !IsCorrupted && !IsElderGuardianMap" ]
+          "RawQuery": [
+            "IsMap && BaseName == \"City Square Map\" && MapTier == 16 && !IsCorrupted && !IsElderGuardianMap"
+          ]
         },
         {
           "FilterName": "City Square Corrupted",
-          "RawQuery": [ "IsMap && BaseName == \"City Square Map\" && MapTier == 16 && IsCorrupted && !IsElderGuardianMap" ]
+          "RawQuery": [
+            "IsMap && BaseName == \"City Square Map\" && MapTier == 16 && IsCorrupted && !IsElderGuardianMap"
+          ]
         },
         {
           "FilterName": "Vaal Temple Corrupted",
-          "RawQuery": [ "IsMap && BaseName == \"Vaal Temple Map\" && MapTier == 16 && IsCorrupted && !IsElderGuardianMap" ]
+          "RawQuery": [
+            "IsMap && BaseName == \"Vaal Temple Map\" && MapTier == 16 && IsCorrupted && !IsElderGuardianMap"
+          ]
         }
       ]
     },
@@ -33,16 +45,19 @@
       "MenuName": "All Currency",
       "Filters": [
         {
-          "FilterName": "All",
+          "FilterName": "Baiscally Everything",
           "RawQuery": [
             "ClassName == \"StackableCurrency\"",
-            "&& !ContainsString(Path, new string[] { \"CurrencyDelveCrafting\", \"CurrencyItemisedProphecy\", \"CurrencyAfflictionOrb\", \"Mushrune\", \"Essence\" })",
-            "&& !ContainsString(BaseName, new string[] { \"Stacked Deck\", \"Catalyst\", \"Primeval Remnant\", \"Remnant\", \"Splinter\", \"Oil Extractor\" })"
-          ]
+            "&& !ContainsString(Path, new string[] { \"CurrencyDelveCrafting\", \"CurrencyItemisedProphecy\", \"CurrencyAfflictionOrb\", \"Mushrune\", \"Essence\" })", // not essences, delve, deli, blight items
+            "&& !ContainsString(BaseName, new string[] { \"Stacked Deck\", \"Catalyst\", \"Primeval Remnant\", \"Remnant\", \"Splinter\", \"Oil Extractor\" })" // not stacked decks, mdetmorph catalysts, ???, essense, splinters, oil extractor
+          ],
+          "Affinity": true
         },
         {
           "FilterName": "Stacked Decks",
-          "RawQuery": [ "BaseName == \"Stacked Deck\"" ]
+          "RawQuery": [
+            "BaseName == \"Stacked Deck\""
+          ]
         }
       ]
     },
@@ -55,7 +70,8 @@
             "(ClassName == \"MapFragment\" || ClassName == \"LabyrinthMapItem\" || ContainsString(BaseName, new string[] { \"Splinter\", \"Scarab\" }))",
             "&& !ContainsString(BaseName, new string[] { \"Primeval Remnant\" })",
             "&& !ContainsString(Path, new string[] { \"CurrencyAfflictionShard\" })"
-          ]
+          ],
+          "Affinity": true
         }
       ]
     },
@@ -64,7 +80,10 @@
       "Filters": [
         {
           "FilterName": "Div Cars",
-          "RawQuery": [ "ClassName == \"DivinationCard\"" ]
+          "RawQuery": [
+            "ClassName == \"DivinationCard\""
+          ],
+          "Affinity": true
         }
       ]
     },
@@ -76,7 +95,8 @@
           "RawQuery": [
             "ContainsString(BaseName, new string[] { \"Essence\", \"Remnant\" }) ",
             "&& !ClassName.Contains(\"Skill Gem\") && BaseName != \"Primeval Remnant\""
-          ]
+          ],
+          "Affinity": true
         }
       ]
     },
@@ -85,7 +105,10 @@
       "Filters": [
         {
           "FilterName": "All",
-          "RawQuery": [ "Path.Contains(\"CurrencyDelveCrafting\") || ClassName == \"DelveStackableSocketableCurrency\"" ]
+          "RawQuery": [
+            "Path.Contains(\"CurrencyDelveCrafting\") || ClassName == \"DelveStackableSocketableCurrency\""
+          ],
+          "Affinity": true
         }
       ]
     },
@@ -94,28 +117,36 @@
       "Filters": [
         {
           "FilterName": "Maps",
-          "RawQuery": [ "IsMap && !IsBlightMap && !IsElderGuardianMap" ]
+          "RawQuery": [
+            "IsMap && !IsBlightMap && !IsElderGuardianMap"
+          ],
+          "Affinity": true
         },
         {
           "FilterName": "Elder Guardian Maps",
-          "RawQuery": [ "IsMap && !IsBlightMap && IsElderGuardianMap" ]
+          "RawQuery": [
+            "IsMap && !IsBlightMap && IsElderGuardianMap"
+          ],
+          "Affinity": true
         },
         {
           "FilterName": "Invitations",
-          "RawQuery": [ "ClassName == \"MiscMapItem\" && BaseName.Contains(\"Maven's Invitation\")" ]
+          "RawQuery": [
+            "ClassName == \"MiscMapItem\" && BaseName.Contains(\"Maven's Invitation\")"
+          ],
+          "Affinity": true
         }
       ]
     },
     {
-      "MenuName": "Metamorph",
+      "MenuName": "Ultimatum",
       "Filters": [
         {
-          "FilterName": "All Organs",
-          "RawQuery": [ "ClassName == \"MetamorphosisDNA\"" ]
-        },
-        {
           "FilterName": "Catalysts",
-          "RawQuery": [ "BaseName.Contains(\"Catalyst\") && ClassName != \"DivinationCard\"" ]
+          "RawQuery": [
+            "BaseName.Contains(\"Catalyst\") && ClassName != \"DivinationCard\""
+          ],
+          "Affinity": true
         }
       ]
     },
@@ -124,11 +155,16 @@
       "Filters": [
         {
           "FilterName": "Oils",
-          "RawQuery": [ "(BaseName.Contains(\"Oil\") && Path.Contains(\"Mushrune\")) || BaseName == \"Oil Extractor\"" ]
+          "RawQuery": [
+            "(BaseName.Contains(\"Oil\") && Path.Contains(\"Mushrune\")) || BaseName == \"Oil Extractor\""
+          ],
+          "Affinity": true
         },
         {
           "FilterName": "Blighted Maps",
-          "RawQuery": [ "IsMap && IsBlightMap && !IsElderGuardianMap" ]
+          "RawQuery": [
+            "IsMap && IsBlightMap && !IsElderGuardianMap"
+          ]
         }
       ]
     },
@@ -137,15 +173,24 @@
       "Filters": [
         {
           "FilterName": "Splinters",
-          "RawQuery": [ "Path.Contains(\"CurrencyAfflictionShard\")" ]
+          "RawQuery": [
+            "Path.Contains(\"CurrencyAfflictionShard\")"
+          ],
+          "Affinity": true
         },
         {
           "FilterName": "Simu Map",
-          "RawQuery": [ "Path.Contains(\"CurrencyAfflictionFragment\")" ]
+          "RawQuery": [
+            "Path.Contains(\"CurrencyAfflictionFragment\")"
+          ],
+          "Affinity": true
         },
         {
           "FilterName": "Orbs",
-          "RawQuery": [ "Path.Contains(\"CurrencyAfflictionOrb\")" ]
+          "RawQuery": [
+            "Path.Contains(\"CurrencyAfflictionOrb\")"
+          ],
+          "Affinity": true
         }
       ]
     },
@@ -154,7 +199,9 @@
       "Filters": [
         {
           "FilterName": "Incubators",
-          "RawQuery": [ "ClassName == \"IncubatorStackable\"" ]
+          "RawQuery": [
+            "ClassName == \"IncubatorStackable\""
+          ]
         }
       ]
     },
@@ -163,7 +210,9 @@
       "Filters": [
         {
           "FilterName": "All",
-          "RawQuery": [ "ClassName == \"Amulet\" && BaseName.Contains(\"Talisman\") && Rarity != ItemRarity.Unique" ]
+          "RawQuery": [
+            "ClassName == \"Amulet\" && BaseName.Contains(\"Talisman\") && Rarity != ItemRarity.Unique"
+          ]
         }
       ]
     },
@@ -172,7 +221,26 @@
       "Filters": [
         {
           "FilterName": "Belt",
-          "RawQuery": [ "BaseName.Contains(\"Stygian\")" ]
+          "RawQuery": [
+            "BaseName.Contains(\"Stygian\")"
+          ]
+        }
+      ]
+    },
+    {
+      "MenuName": "Affliction Items",
+      "Filters": [
+        {
+          "FilterName": "Tincture Flasks",
+          "RawQuery": [
+            "ClassName == \"Tincture\""
+          ]
+        },
+        {
+          "FilterName": "Charms",
+          "RawQuery": [
+            "ClassName == \"AnimalCharm\""
+          ]
         }
       ]
     },
@@ -181,23 +249,35 @@
       "Filters": [
         {
           "FilterName": "Contracts",
-          "RawQuery": [ "ClassName.Contains(\"HeistContract\")" ]
+          "RawQuery": [
+            "ClassName.Contains(\"HeistContract\")"
+          ],
+          "Affinity": true
         },
         {
           "FilterName": "Blueprints",
-          "RawQuery": [ "ClassName.Contains(\"HeistBlueprint\")" ]
+          "RawQuery": [
+            "ClassName.Contains(\"HeistBlueprint\")"
+          ],
+          "Affinity": true
         },
         {
           "FilterName": "Equipment",
-          "RawQuery": [ "ClassName.Contains(\"HeistEquipment\")" ]
+          "RawQuery": [
+            "ClassName.Contains(\"HeistEquipment\")"
+          ]
         },
         {
           "FilterName": "Trinket",
-          "RawQuery": [ "ClassName.Contains(\"Trinket\")" ]
+          "RawQuery": [
+            "ClassName.Contains(\"Trinket\")"
+          ]
         },
         {
           "FilterName": "Objective",
-          "RawQuery": [ "ClassName.Contains(\"HeistObjective\")" ]
+          "RawQuery": [
+            "ClassName.Contains(\"HeistObjective\")"
+          ]
         }
       ]
     },
@@ -206,31 +286,45 @@
       "Filters": [
         {
           "FilterName": "Weapons",
-          "RawQuery": [ "!IsIdentified && Rarity == ItemRarity.Rare && ItemLevel >= 60 && ItemLevel <= 74 && IsWeapon" ]
+          "RawQuery": [
+            "!IsIdentified && Rarity == ItemRarity.Rare && ItemLevel >= 60 && ItemLevel <= 74 && IsWeapon"
+          ]
         },
         {
           "FilterName": "Jewelry",
-          "RawQuery": [ "!IsIdentified && Rarity == ItemRarity.Rare && ItemLevel >= 60 && ItemLevel <= 74 && ClassName == \"Ring\" || ClassName == \"Amulet\"" ]
+          "RawQuery": [
+            "!IsIdentified && Rarity == ItemRarity.Rare && ItemLevel >= 60 && ItemLevel <= 74 && ClassName == \"Ring\" || ClassName == \"Amulet\""
+          ]
         },
         {
           "FilterName": "Belts",
-          "RawQuery": [ "!IsIdentified && Rarity == ItemRarity.Rare && ItemLevel >= 60 && ItemLevel <= 74 && ClassName == \"Belt\"" ]
+          "RawQuery": [
+            "!IsIdentified && Rarity == ItemRarity.Rare && ItemLevel >= 60 && ItemLevel <= 74 && ClassName == \"Belt\""
+          ]
         },
         {
           "FilterName": "Helms",
-          "RawQuery": [ "!IsIdentified && Rarity == ItemRarity.Rare && ItemLevel >= 60 && ItemLevel <= 74 && ClassName == \"Helmet\"" ]
+          "RawQuery": [
+            "!IsIdentified && Rarity == ItemRarity.Rare && ItemLevel >= 60 && ItemLevel <= 74 && ClassName == \"Helmet\""
+          ]
         },
         {
           "FilterName": "Body Armours",
-          "RawQuery": [ "!IsIdentified && Rarity == ItemRarity.Rare && ItemLevel >= 60 && ItemLevel <= 74 && ClassName == \"Body Armour\"" ]
+          "RawQuery": [
+            "!IsIdentified && Rarity == ItemRarity.Rare && ItemLevel >= 60 && ItemLevel <= 74 && ClassName == \"Body Armour\""
+          ]
         },
         {
           "FilterName": "Boots",
-          "RawQuery": [ "!IsIdentified && Rarity == ItemRarity.Rare && ItemLevel >= 60 && ItemLevel <= 74 && ClassName == \"Boots\"" ]
+          "RawQuery": [
+            "!IsIdentified && Rarity == ItemRarity.Rare && ItemLevel >= 60 && ItemLevel <= 74 && ClassName == \"Boots\""
+          ]
         },
         {
           "FilterName": "Gloves",
-          "RawQuery": [ "!IsIdentified && Rarity == ItemRarity.Rare && ItemLevel >= 60 && ItemLevel <= 74 && ClassName == \"Gloves\"" ]
+          "RawQuery": [
+            "!IsIdentified && Rarity == ItemRarity.Rare && ItemLevel >= 60 && ItemLevel <= 74 && ClassName == \"Gloves\""
+          ]
         }
       ]
     },
@@ -239,7 +333,10 @@
       "Filters": [
         {
           "FilterName": "All",
-          "RawQuery": [ "Rarity == ItemRarity.Unique && ClassName != \"Map\"" ]
+          "RawQuery": [
+            "Rarity == ItemRarity.Unique && ClassName != \"Map\""
+          ],
+          "Affinity": true
         }
       ]
     },
@@ -248,7 +345,9 @@
       "Filters": [
         {
           "FilterName": "All",
-          "RawQuery": [ "VeiledModCount > 0" ]
+          "RawQuery": [
+            "VeiledModCount > 0"
+          ]
         }
       ]
     },
@@ -257,7 +356,10 @@
       "Filters": [
         {
           "FilterName": "All",
-          "RawQuery": [ "ClassName.Contains(\"Flask\") && Rarity != ItemRarity.Unique" ]
+          "RawQuery": [
+            "ClassName.Contains(\"Flask\") && Rarity != ItemRarity.Unique"
+          ],
+          "Affinity": true
         }
       ]
     },
@@ -266,7 +368,10 @@
       "Filters": [
         {
           "FilterName": "All",
-          "RawQuery": [ "ClassName.Contains(\" Skill Gem\")" ]
+          "RawQuery": [
+            "ClassName.Contains(\" Skill Gem\")"
+          ],
+          "Affinity": true
         }
       ]
     },
@@ -288,31 +393,34 @@
       "Filters": [
         {
           "FilterName": "6 Link",
-          "RawQuery": [ "SocketInfo.LargestLinkSize == 6" ],
+          "RawQuery": [
+            "SocketInfo.LargestLinkSize == 6"
+          ],
           "Shifting": true
         },
         {
           "FilterName": "6 Sockets",
-          "RawQuery": [ "SocketInfo.SocketNumber == 6" ],
+          "RawQuery": [
+            "SocketInfo.SocketNumber == 6"
+          ],
           "Shifting": true
         }
       ]
     },
     {
-      "MenuName": "left over Rares",
+      "MenuName": "Left overs",
       "Filters": [
         {
-          "FilterName": "All",
-          "RawQuery": [ "Rarity == ItemRarity.Rare" ]
-        }
-      ]
-    },
-    {
-      "MenuName": "left over Magics",
-      "Filters": [
+          "FilterName": "Rares",
+          "RawQuery": [
+            "Rarity == ItemRarity.Rare"
+          ]
+        },
         {
-          "FilterName": "All",
-          "RawQuery": [ "Rarity == ItemRarity.Magic" ]
+          "FilterName": "Magics",
+          "RawQuery": [
+            "Rarity == ItemRarity.Magic"
+          ]
         }
       ]
     }
