@@ -12,7 +12,7 @@
     <DebugType>embedded</DebugType>
     <PathMap>$(MSBuildProjectDirectory)=$(MSBuildProjectName)</PathMap>
     <EmbedAllSources>true</EmbedAllSources>
-    <OutputPath>..\..\..\..\PoeHelper\Plugins\Compiled\Stashie\</OutputPath>
+    <OutputPath>$(exapiPackage)\Plugins\Compiled\Stashie\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="ImGui.NET" Version="1.90.0.1" />
@@ -22,10 +22,10 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="ExileCore">
-      <HintPath>..\..\..\ExileCore.dll</HintPath>
+      <HintPath>$(exapiPackage)\ExileCore.dll</HintPath>
     </Reference>
     <Reference Include="ItemFilterLibrary">
-      <HintPath>..\..\..\ItemFilterLibrary.dll</HintPath>
+      <HintPath>$(exapiPackage)\ItemFilterLibrary.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
