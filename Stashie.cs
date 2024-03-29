@@ -228,7 +228,7 @@ namespace Stashie
             {
                 // Player Inventory
                 var inventory_server = GameController.IngameState.Data.ServerData.PlayerInventories[(int)InventorySlotE.MainInventory1];
-                UpdateIgnoredCells(inventory_server, Settings.IgnoredExpandedCells);
+                UpdateIgnoredCells(inventory_server, Settings.IgnoredCells);
 
                 // Afflication Rucksack
                 var backpack_server = GameController.IngameState.Data.ServerData.PlayerInventories[(int)InventorySlotE.ExpandedMainInventory1];
