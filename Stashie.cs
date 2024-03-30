@@ -154,6 +154,22 @@ namespace Stashie
         {
             DrawReloadConfigButton();
             DrawIgnoredCellsSettings();
+
+            if (ImGui.Button("Open Filter Folder"))
+            {
+                var configDir = ConfigDirectory;
+                var directoryToOpen = Directory.Exists(configDir);
+
+                if (!directoryToOpen)
+                {
+                    // Log error when the config directory doesn't exist
+                }
+
+                if (configDir != null)
+                {
+                    Process.Start("explorer.exe", configDir);
+                }
+            }
             base.DrawSettings();
 
             _filterTabs?.Invoke();
@@ -332,7 +348,6 @@ namespace Stashie
 
                             ImGui.Columns(2, formattableString, true);
                             ImGui.SetColumnWidth(0, 320);
-                            ImGui.SetColumnWidth(1, 300);
 
                             if (ImGui.Button(formattableString, new Vector2N(300, 20)))
                                 ImGui.OpenPopup(formattableString);
@@ -352,6 +367,22 @@ namespace Stashie
                                 indexNode.Value = _stashTabNamesByIndex[item];
                                 OnSettingsStashNameChanged(indexNode, _stashTabNamesByIndex[item]);
                             }
+
+                            var specialTag = "";
+
+                            if (filter.Shifting != null && (bool)filter.Shifting)
+                            {
+                                specialTag += "Holds Shift";
+                            }
+
+                            if (filter.Affinity != null && (bool)filter.Affinity)
+                            {
+                                specialTag += !string.IsNullOrEmpty(specialTag) ? ", Expects Affinity"
+                                    : "Expects Affinity";
+                            }
+
+                            ImGui.SameLine();
+                            ImGui.Text($"{specialTag}");
 
                             ImGui.NextColumn();
                             ImGui.Columns(1, "", false);
