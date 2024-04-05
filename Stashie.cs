@@ -983,8 +983,9 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
         for (var parentIndex = 0; parentIndex < tempFilters.Count; parentIndex++)
         {
             var currentParent = tempFilters[parentIndex];
-            if (!currentParent.MenuName.ToLowerInvariant().Contains(_editorGroupFilter.ToLowerInvariant())) continue;
-            if (currentParent.Filters.All(x => !x.FilterName.ToLowerInvariant().Contains(_editorQueryFilter))) continue;
+            if (!currentParent.MenuName.Contains(_editorGroupFilter, StringComparison.InvariantCultureIgnoreCase)) continue;
+            if (currentParent.Filters.All(x => !x.FilterName.Contains(_editorQueryFilter, StringComparison.InvariantCultureIgnoreCase))) continue;
+
 
             ImGui.BeginChild($"##parentFilterGroup_{parentIndex}", Vector2N.Zero, ImGuiChildFlags.Border | ImGuiChildFlags.AutoResizeY);
 
