@@ -6,8 +6,6 @@ packages/
 
 /config.ini
 /FitersConfig.txt
-/IgnoredCells.json
-/RefillCurrency.txt
 bin/
 Stashie.sln.DotSettings.user
 Stashie.csproj.DotSettings

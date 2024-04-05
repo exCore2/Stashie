@@ -462,7 +462,6 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
             yield return new WaitTime(Settings.ExtraDelay);
         }
 
-        //yield return ProcessRefills(); currently bugged
         if (Settings.VisitTabWhenDone.Value)
         {
             if (Settings.BackToOriginalTab.Value)
