@@ -1225,12 +1225,13 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
         try
         {
             var fullPath = Path.Combine(ConfigDirectory, $"{fileName}.ifl");
-            var fileContent = File.ReadAllText(fullPath);
+            var fileContent = File.ReadAllLines(fullPath);
 
             // Preprocess the content to remove comments
             var contentWithoutComments = RemoveComments(fileContent);
 
             tempConversion = JsonConvert.DeserializeObject<FilterContainerOld.FilterParent>(contentWithoutComments);
+
             return true;
         }
         catch (Exception e)
@@ -1246,7 +1247,7 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
         try
         {
             var fullPath = Path.Combine(ConfigDirectory, $"{fileName}.json");
-            var fileContent = File.ReadAllText(fullPath);
+            var fileContent = File.ReadAllLines(fullPath);
 
             // Preprocess the content to remove comments
             var contentWithoutComments = RemoveComments(fileContent);
@@ -1260,14 +1261,13 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
         }
     }
 
-    private string RemoveComments(string input)
+    private string RemoveComments(string[] input)
     {
-        var lines = input.Split(separator, StringSplitOptions.RemoveEmptyEntries);
         var cleanedLines = new List<string>();
 
-        foreach (var line in lines)
+        foreach (var line in input)
         {
-            var commentIndex = line.IndexOf("//", StringComparison.Ordinal);
+            var commentIndex = line.IndexOf("//", StringComparison.CurrentCultureIgnoreCase);
             if (commentIndex == -1)
             {
                 cleanedLines.Add(line);

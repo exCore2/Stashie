@@ -27,13 +27,9 @@ public class FilterEditorContainer
 
 public class FilterContainerOld
 {
-    public class FilterParent : IEnumerable
+    public class FilterParent
     {
         public List<ParentMenu> ParentMenu;
-        public IEnumerator GetEnumerator()
-        {
-            yield break;
-        }
     }
 
     public class ParentMenu
