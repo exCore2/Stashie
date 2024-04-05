@@ -89,11 +89,19 @@ public class StashieEditorHandler
 
             ImGui.BeginChild($"##parentFilterGroup_{parentIndex}", Vector2N.Zero, ImGuiChildFlags.Border | ImGuiChildFlags.AutoResizeY);
 
-            ImGui.InputTextWithHint("Group Name", "\"Heist Items\" etc..", ref tempFilters[parentIndex].MenuName, 200);
+            if (ImGui.ArrowButton($"##ArrowButtonUp__{parentIndex}", ImGuiDir.Up))
+            {
+                if (parentIndex > 0)
+                {
+                    (tempFilters[parentIndex - 1], tempFilters[parentIndex]) = (tempFilters[parentIndex], tempFilters[parentIndex - 1]);
+                    continue;
+                }
+            }
 
             #region Parents Filters
 
             ImGui.Indent();
+            ImGui.InputTextWithHint("Group Name", "\"Heist Items\" etc..", ref tempFilters[parentIndex].MenuName, 200);
             ImGui.BeginChild($"##parentFilterGroup_{parentIndex}", Vector2N.Zero, ImGuiChildFlags.Border | ImGuiChildFlags.AutoResizeY);
 
             #region Filter Query
@@ -144,6 +152,17 @@ public class StashieEditorHandler
 
             ImGui.EndChild();
             ImGui.Unindent();
+
+            if (ImGui.ArrowButton($"##ArrowButtonDown__{parentIndex}", ImGuiDir.Down))
+            {
+                if (parentIndex < tempFilters.Count - 1)
+                {
+                    (tempFilters[parentIndex + 1], tempFilters[parentIndex]) = (tempFilters[parentIndex], tempFilters[parentIndex + 1]);
+                    continue;
+                }
+            }
+
+            ImGui.SameLine();
 
             if (ImGui.Button($"[X] Delete Group##DeleteGroup_{parentIndex}"))
             {
