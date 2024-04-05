@@ -34,6 +34,8 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
     private long _coroutineIteration;
     private Coroutine _coroutineWorker;
     private List<FilterResult> _dropItems;
+    private string _editorGroupFilter = "";
+    private string _editorQueryFilter = "";
 
     private List<string> _files = [];
 
@@ -975,9 +977,14 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
 
         ImGui.Indent();
 
+        ImGui.InputTextWithHint("Filter Groups", "Group...", ref _editorGroupFilter, 100);
+        ImGui.InputTextWithHint("Filter Queries", "Query...", ref _editorQueryFilter, 100);
+
         for (var parentIndex = 0; parentIndex < tempFilters.Count; parentIndex++)
         {
             var currentParent = tempFilters[parentIndex];
+            if (!currentParent.MenuName.ToLowerInvariant().Contains(_editorGroupFilter.ToLowerInvariant())) continue;
+            if (currentParent.Filters.All(x => !x.FilterName.ToLowerInvariant().Contains(_editorQueryFilter))) continue;
 
             ImGui.BeginChild($"##parentFilterGroup_{parentIndex}", Vector2N.Zero, ImGuiChildFlags.Border | ImGuiChildFlags.AutoResizeY);
 
@@ -993,6 +1000,7 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
             for (var filterIndex = 0; filterIndex < tempFilters[parentIndex].Filters.Count; filterIndex++)
             {
                 var currentFilter = currentParent.Filters[filterIndex];
+                if (!currentFilter.FilterName.ToLowerInvariant().Contains(_editorQueryFilter)) continue;
                 ImGui.InputTextWithHint($"##filter_{parentIndex}_{filterIndex}", "\"Heist Items\" etc..", ref tempFilters[parentIndex].Filters[filterIndex].FilterName, 200);
 
                 ImGui.SameLine();
@@ -1048,7 +1056,6 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
             ImGui.Spacing();
         }
 
-
         ImGui.Unindent();
         if (ImGui.Button("[=] Add New Group"))
         {
@@ -1056,6 +1063,7 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
         }
 
         #endregion
+
         Settings.CurrentFilterOptions.ParentMenu = tempFilters;
     }
 

@@ -73,7 +73,6 @@ namespace Stashie
         public string ConfigLastSaved { get; set; } = "";
         public string ConfigLastSelected { get; set; } = "";
 
-        [JsonIgnore]
         public FilterEditorContainer.FilterParent CurrentFilterOptions { get; set; } = new FilterEditorContainer.FilterParent();
     }
 }
