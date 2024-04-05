@@ -1,6 +1,7 @@
 ﻿using ExileCore.Shared.Attributes;
 using ExileCore.Shared.Interfaces;
 using ExileCore.Shared.Nodes;
+using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Windows.Forms;
 
@@ -68,5 +69,11 @@ namespace Stashie
             {0, 0, 0, 0},
             {0, 0, 0, 0}
         };
+
+        public string ConfigLastSaved { get; set; } = "";
+        public string ConfigLastSelected { get; set; } = "";
+
+        [JsonIgnore]
+        public FilterEditorContainer.FilterParent CurrentFilterOptions { get; set; } = new FilterEditorContainer.FilterParent();
     }
 }

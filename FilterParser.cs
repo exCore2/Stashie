@@ -29,7 +29,7 @@ public class FilterParser
 
                 foreach (var filter in parentMenu.Filters)
                 {
-                    var compiledQuery = ItemQuery.Load(string.Join("", filter.RawQuery).Replace("\n", ""));
+                    var compiledQuery = ItemQuery.Load(filter.RawQuery.Replace("\n", ""));
 
                     // Check if there was an error during processing and set the flag accordingly
                     var filterErrorParse = compiledQuery.FailedToCompile;
@@ -44,7 +44,7 @@ public class FilterParser
                         newParent.Filters.Add(new CustomFilter.Filter
                         {
                             FilterName = filter.FilterName,
-                            RawQuery = string.Join(" ", filter.RawQuery),
+                            RawQuery = filter.RawQuery,
                             Shifting = filter.Shifting ?? false,
                             Affinity = filter.Affinity ?? false,
                             CompiledQuery = compiledQuery
@@ -80,7 +80,7 @@ public class FilterParser
     {
         public string FilterName { get; set; }
 
-        public string[] RawQuery { get; set; }
+        public string RawQuery { get; set; }
 
         public bool? Shifting { get; set; }
 

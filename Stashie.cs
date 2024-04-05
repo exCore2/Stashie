@@ -6,6 +6,7 @@ using ExileCore.Shared.Enums;
 using ExileCore.Shared.Helpers;
 using ImGuiNET;
 using ItemFilterLibrary;
+using Newtonsoft.Json;
 using SharpDX;
 using Stashie.Filter;
 using System;
@@ -25,21 +26,162 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
 {
     private const string StashTabsNameChecker = "Stash Tabs Name Checker";
     private const string CoroutineName = "Drop To Stash";
+    private const string OverwritePopup = "Overwrite?";
+    private const string FilterEditPopup = "Stashie Filter (Multi-Line)";
+    private static readonly char[] separator = ['\r', '\n'];
     private readonly Stopwatch _debugTimer = new Stopwatch();
     private Vector2N _clickWindowOffset;
     private long _coroutineIteration;
     private Coroutine _coroutineWorker;
     private List<FilterResult> _dropItems;
+
+    private List<string> _files = [];
+
+    // Load last saved for both on initialization as its less confusing
+    private string _fileSaveName = "";
     private Action _filterTabs;
+    private string _selectedFileName = "";
     private List<ListIndexNode> _settingsListNodes;
     private string[] _stashTabNamesByIndex;
     private Coroutine _stashTabNamesCoroutine;
     private int _visibleStashIndex = -1;
+    private FilterEditorContainer.Filter condEditValue = new FilterEditorContainer.Filter();
+
     private List<CustomFilter> currentFilter;
+    private bool isFilterEditorTab;
+    private FilterEditorContainer.Filter tempCondValue = new FilterEditorContainer.Filter();
+    private FilterContainerOld.FilterParent tempConversion = new FilterContainerOld.FilterParent();
 
     public StashieCore()
     {
         Name = "Stashie With Linq";
+    }
+
+    public override bool Initialise()
+    {
+        Settings.Enable.OnValueChanged += (sender, b) =>
+        {
+            if (b)
+            {
+                if (Core.ParallelRunner.FindByName(StashTabsNameChecker) == null) InitStashTabNameCoRoutine();
+                _stashTabNamesCoroutine?.Resume();
+            }
+            else
+            {
+                _stashTabNamesCoroutine?.Pause();
+            }
+
+            SetupOrClose();
+        };
+
+        _fileSaveName = Settings.ConfigLastSaved;
+        _selectedFileName = Settings.ConfigLastSaved;
+
+        InitStashTabNameCoRoutine();
+        SetupOrClose();
+
+        Input.RegisterKey(Settings.DropHotkey);
+
+        Settings.DropHotkey.OnValueChanged += () => { Input.RegisterKey(Settings.DropHotkey); };
+        Settings.FilterFile.OnValueSelected = _ => LoadCustomFilters();
+
+        return true;
+    }
+
+    public override void DrawSettings()
+    {
+        ImGui.BeginTabBar("TabBar");
+        if (ImGui.TabItemButton("Main Settings"))
+        {
+            isFilterEditorTab = false;
+        }
+
+        if (ImGui.TabItemButton("Filter Editor"))
+        {
+            isFilterEditorTab = true;
+        }
+
+        ImGui.EndTabBar();
+
+        if (isFilterEditorTab)
+        {
+            ImGui.TextUnformatted("This does not alter the main settings, this is only a filter file editor");
+
+            ImGui.Spacing();
+
+            if (ImGui.Button("\nConvert Old .ifl To New .json\nOld files will not be altered.\n "))
+            {
+                foreach (var file in GetFiles(".ifl"))
+                {
+                    if (LoadOldFile(file)) // Assuming this loads into `tempConversion` which is a FilterContainerOld.FilterParent
+                    {
+                        var oldData = tempConversion;
+                        var newData = new FilterEditorContainer.FilterParent
+                        {
+                            ParentMenu = oldData.ParentMenu.Select(pm => new FilterEditorContainer.ParentMenu
+                            {
+                                MenuName = pm.MenuName,
+                                Filters = pm.Filters.Select(f => new FilterEditorContainer.Filter
+                                {
+                                    FilterName = f.FilterName,
+                                    RawQuery = string.Join("\n", f.RawQuery),
+                                    Shifting = f.Shifting,
+                                    Affinity = f.Affinity
+                                }).ToList()
+                            }).ToList()
+                        };
+
+                        // Serialize newData to JSON and save it
+                        var newJson = JsonConvert.SerializeObject(newData, Formatting.Indented);
+                        File.WriteAllText(Path.Combine(ConfigDirectory, $"{file}.json"), newJson);
+                    }
+                    else
+                    {
+                        LogError($"Failed to load file, is it possible its not an older style?\n\t{file}", 15);
+                    }
+                }
+            }
+
+            SaveLoadMenu();
+            DrawEditorMenu();
+
+            if (ShowButtonPopup(OverwritePopup, ["Are you sure?", "STOP"], out var saveSelectedIndex))
+            {
+                if (saveSelectedIndex == 0)
+                {
+                    SaveFile(Settings.CurrentFilterOptions, $"{_fileSaveName}.json");
+                }
+            }
+
+            ImGui.Unindent();
+        }
+        else
+        {
+            DrawReloadConfigButton();
+            DrawIgnoredCellsSettings();
+            if (ImGui.Button("Open Filter Folder"))
+            {
+                var configDir = ConfigDirectory;
+                var directoryToOpen = Directory.Exists(configDir);
+
+                if (!directoryToOpen)
+                {
+                    // Log error when the config directory doesn't exist
+                }
+
+                if (configDir != null)
+                {
+                    Process.Start("explorer.exe", configDir);
+                }
+            }
+
+            base.DrawSettings();
+
+            _filterTabs?.Invoke();
+        }
+
+        Settings.ConfigLastSaved = _fileSaveName;
+        Settings.ConfigLastSelected = _selectedFileName;
     }
 
     public override void ReceiveEvent(string eventId, object args)
@@ -85,34 +227,6 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
         Core.ParallelRunner.Run(_coroutineWorker);
     }
 
-    public override bool Initialise()
-    {
-        Settings.Enable.OnValueChanged += (sender, b) =>
-        {
-            if (b)
-            {
-                if (Core.ParallelRunner.FindByName(StashTabsNameChecker) == null) InitStashTabNameCoRoutine();
-                _stashTabNamesCoroutine?.Resume();
-            }
-            else
-            {
-                _stashTabNamesCoroutine?.Pause();
-            }
-
-            SetupOrClose();
-        };
-
-        InitStashTabNameCoRoutine();
-        SetupOrClose();
-
-        Input.RegisterKey(Settings.DropHotkey);
-
-        Settings.DropHotkey.OnValueChanged += () => { Input.RegisterKey(Settings.DropHotkey); };
-        Settings.FilterFile.OnValueSelected = _ => LoadCustomFilters();
-
-        return true;
-    }
-
     public override void AreaChange(AreaInstance area)
     {
         if (_stashTabNamesCoroutine == null) return;
@@ -143,33 +257,8 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
         streamWriter.Close();
     }
 
-    private void SaveDefaultConfigsToDisk() => WriteToNonExistentFile($"{ConfigDirectory}\\example filter.ifl", "https://github.com/DetectiveSquirrel/Stashie/blob/master/Example%20Filters/Example.ifl");
-
-    public override void DrawSettings()
-    {
-        DrawReloadConfigButton();
-        DrawIgnoredCellsSettings();
-
-        if (ImGui.Button("Open Filter Folder"))
-        {
-            var configDir = ConfigDirectory;
-            var directoryToOpen = Directory.Exists(configDir);
-
-            if (!directoryToOpen)
-            {
-                // Log error when the config directory doesn't exist
-            }
-
-            if (configDir != null)
-            {
-                Process.Start("explorer.exe", configDir);
-            }
-        }
-
-        base.DrawSettings();
-
-        _filterTabs?.Invoke();
-    }
+    private void SaveDefaultConfigsToDisk() =>
+        WriteToNonExistentFile($"{ConfigDirectory}\\example filter.ifl", "https://github.com/DetectiveSquirrel/Stashie/blob/master/Example%20Filters/Example.ifl");
 
     private void LoadCustomFilters()
     {
@@ -182,7 +271,7 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
         }
 
         var dirInfo = new DirectoryInfo(pickitConfigFileDirectory);
-        Settings.FilterFile.Values = dirInfo.GetFiles("*.ifl").Select(x => Path.GetFileNameWithoutExtension(x.Name)).ToList();
+        Settings.FilterFile.Values = dirInfo.GetFiles("*.json").Select(x => Path.GetFileNameWithoutExtension(x.Name)).ToList();
         if (Settings.FilterFile.Values.Count != 0 && !Settings.FilterFile.Values.Contains(Settings.FilterFile.Value))
         {
             Settings.FilterFile.Value = Settings.FilterFile.Values.First();
@@ -190,10 +279,10 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
 
         if (!string.IsNullOrWhiteSpace(Settings.FilterFile.Value))
         {
-            var filterFilePath = Path.Combine(pickitConfigFileDirectory, $"{Settings.FilterFile.Value}.ifl");
+            var filterFilePath = Path.Combine(pickitConfigFileDirectory, $"{Settings.FilterFile.Value}.json");
             if (File.Exists(filterFilePath))
             {
-                currentFilter = FilterParser.Load($"{Settings.FilterFile.Value}.ifl", filterFilePath);
+                currentFilter = FilterParser.Load($"{Settings.FilterFile.Value}.json", filterFilePath);
 
                 foreach (var customFilter in currentFilter)
                 {
@@ -610,7 +699,8 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
             yield return new WaitFunctionTimed(() => GameController.IngameState.IngameUi.StashElement.AllInventories[_visibleStashIndex] != null, true, 2000,
                 $"Error while loading tab, Index: {_visibleStashIndex}"); //maybe replace waittime with Setting option
 
-            yield return new WaitFunctionTimed(() => GetTypeOfCurrentVisibleStash() != InventoryType.InvalidInventory, true, 2000, $"Error with inventory type, Index: {_visibleStashIndex}"); //maybe replace waittime with Setting option
+            yield return new WaitFunctionTimed(() => GetTypeOfCurrentVisibleStash() != InventoryType.InvalidInventory, true, 2000,
+                $"Error with inventory type, Index: {_visibleStashIndex}"); //maybe replace waittime with Setting option
 
             yield return StashItem(stashResult);
 
@@ -870,4 +960,348 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
     }
 
     #endregion Stashes update
+
+    #region Filter Editor Seciton
+
+    private void DrawEditorMenu()
+    {
+        if (Settings.CurrentFilterOptions.ParentMenu == null) return;
+
+        var tempFilters = new List<FilterEditorContainer.ParentMenu>(Settings.CurrentFilterOptions.ParentMenu);
+
+        if (!ImGui.CollapsingHeader($"Filters##{Name}Load / Save", ImGuiTreeNodeFlags.DefaultOpen)) return;
+
+        #region Parent
+
+        ImGui.Indent();
+
+        for (var parentIndex = 0; parentIndex < tempFilters.Count; parentIndex++)
+        {
+            var currentParent = tempFilters[parentIndex];
+
+            ImGui.BeginChild($"##parentFilterGroup_{parentIndex}", Vector2N.Zero, ImGuiChildFlags.Border | ImGuiChildFlags.AutoResizeY);
+
+            ImGui.InputTextWithHint("Group Name", "\"Heist Items\" etc..", ref tempFilters[parentIndex].MenuName, 200);
+
+            #region Parents Filters
+
+            ImGui.Indent();
+            ImGui.BeginChild($"##parentFilterGroup_{parentIndex}", Vector2N.Zero, ImGuiChildFlags.Border | ImGuiChildFlags.AutoResizeY);
+
+            #region Filter Query
+
+            for (var filterIndex = 0; filterIndex < tempFilters[parentIndex].Filters.Count; filterIndex++)
+            {
+                var currentFilter = currentParent.Filters[filterIndex];
+                ImGui.InputTextWithHint($"##filter_{parentIndex}_{filterIndex}", "\"Heist Items\" etc..", ref tempFilters[parentIndex].Filters[filterIndex].FilterName, 200);
+
+                ImGui.SameLine();
+                ImGui.Checkbox("Shifting", ref currentFilter.Shifting);
+                ImGui.SameLine();
+                ImGui.Checkbox("Affinity", ref currentFilter.Affinity);
+
+                #region Edit Popup
+
+                const bool showPopup = true;
+                ImGui.SameLine();
+                if (ImGui.Button($"Edit##filterQueryEdit_{parentIndex}_{filterIndex}"))
+                {
+                    condEditValue = new FilterEditorContainer.Filter
+                        {FilterName = currentFilter.FilterName, Affinity = currentFilter.Affinity, RawQuery = currentFilter.RawQuery, Shifting = currentFilter.Shifting};
+
+                    tempCondValue = new FilterEditorContainer.Filter
+                        {FilterName = currentFilter.FilterName, Affinity = currentFilter.Affinity, RawQuery = currentFilter.RawQuery, Shifting = currentFilter.Shifting};
+
+                    ImGui.OpenPopup(FilterEditPopup + $"##conditionalEditPopup_{parentIndex}_{filterIndex}");
+                }
+
+                ConditionValueEditPopup(showPopup, parentIndex, filterIndex, tempFilters);
+
+                #endregion
+
+                ImGui.SameLine();
+                if (ImGui.Button($"Delete##filterQueryEdit_{parentIndex}_{filterIndex}"))
+                {
+                    tempFilters[parentIndex].Filters.RemoveAt(filterIndex);
+                }
+            }
+
+            if (ImGui.Button($"[=] Add New Filter##AddNewFilter_{parentIndex}"))
+            {
+                tempFilters[parentIndex].Filters.Add(new FilterEditorContainer.Filter {FilterName = "", RawQuery = "", Affinity = false, Shifting = false});
+            }
+
+            #endregion
+
+            ImGui.EndChild();
+            ImGui.Unindent();
+
+            if (ImGui.Button($"[X] Delete Group##DeleteGroup_{parentIndex}"))
+            {
+                tempFilters.RemoveAt(parentIndex);
+            }
+
+            #endregion
+
+            ImGui.Unindent();
+            ImGui.EndChild();
+            ImGui.Spacing();
+        }
+
+
+        ImGui.Unindent();
+        if (ImGui.Button("[=] Add New Group"))
+        {
+            tempFilters.Add(new FilterEditorContainer.ParentMenu {MenuName = "", Filters = []});
+        }
+
+        #endregion
+        Settings.CurrentFilterOptions.ParentMenu = tempFilters;
+    }
+
+    private void ConditionValueEditPopup(bool showPopup, int parentIndex, int filterIndex, List<FilterEditorContainer.ParentMenu> parentMenu)
+    {
+        ImGui.SetNextWindowSize(new Vector2N(800, 600), ImGuiCond.Appearing);
+        if (!ImGui.BeginPopupModal(FilterEditPopup + $"##conditionalEditPopup_{parentIndex}_{filterIndex}", ref showPopup, ImGuiWindowFlags.NoSavedSettings))
+        {
+            return;
+        }
+
+        if (ImGui.Button("Save"))
+        {
+            parentMenu[parentIndex].Filters[filterIndex] = tempCondValue;
+            ImGui.CloseCurrentPopup();
+        }
+
+        ImGui.SameLine();
+
+        if (ImGui.Button("Revert"))
+        {
+            tempCondValue = new FilterEditorContainer.Filter
+                {FilterName = condEditValue.FilterName, Affinity = condEditValue.Affinity, RawQuery = condEditValue.RawQuery, Shifting = condEditValue.Shifting};
+
+            LogMessage("Reverting data back..", 7);
+        }
+
+        ImGui.SameLine();
+
+        if (ImGui.Button("Close"))
+        {
+            ImGui.CloseCurrentPopup();
+        }
+
+        ImGui.Checkbox("Shifting", ref tempCondValue.Shifting);
+        ImGui.Checkbox("Affinity", ref tempCondValue.Affinity);
+
+        ImGui.InputTextMultiline($"##text{parentIndex}_{filterIndex}", ref tempCondValue.RawQuery, 15000, new Vector2N(ImGui.GetContentRegionAvail().X, ImGui.GetContentRegionAvail().Y),
+            ImGuiInputTextFlags.AllowTabInput);
+
+        ImGui.EndPopup();
+    }
+
+    private void SaveLoadMenu()
+    {
+        if (!ImGui.CollapsingHeader($"Load / Save##{Name}Load / Save", ImGuiTreeNodeFlags.DefaultOpen)) return;
+
+        ImGui.Indent();
+        ImGui.InputTextWithHint("##SaveAs", "File Path...", ref _fileSaveName, 100);
+        ImGui.SameLine();
+
+        if (ImGui.Button("Save To File"))
+        {
+            _files = GetFiles(".json");
+
+            // Sanitize the file name by replacing invalid characters
+            foreach (var c in Path.GetInvalidFileNameChars()) _fileSaveName = _fileSaveName.Replace(c, '_');
+
+            if (_fileSaveName == string.Empty)
+            {
+            }
+            else if (_files.Contains(_fileSaveName))
+            {
+                ImGui.OpenPopup(OverwritePopup);
+            }
+            else
+            {
+                SaveFile(Settings.CurrentFilterOptions, $"{_fileSaveName}.json");
+            }
+        }
+
+        ImGui.Separator();
+
+        if (ImGui.BeginCombo("Load File##LoadNewFile", _selectedFileName))
+        {
+            _files = GetFiles(".json");
+
+            foreach (var fileName in _files)
+            {
+                var isSelected = _selectedFileName == fileName;
+
+                if (ImGui.Selectable(fileName, isSelected))
+                {
+                    _selectedFileName = fileName;
+                    _fileSaveName = fileName;
+                    LoadNewFile(fileName);
+                }
+
+                if (isSelected)
+                {
+                    ImGui.SetItemDefaultFocus();
+                }
+            }
+
+            ImGui.EndCombo();
+        }
+
+        ImGui.Separator();
+
+        if (ImGui.Button("Open Filter Folder"))
+        {
+            var configDir = Path.Combine(Path.GetDirectoryName(ConfigDirectory), "Stashie");
+
+            if (!Directory.Exists(configDir))
+            {
+                LogError($"Path Doesnt Exist\n{configDir}");
+            }
+            else
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "explorer.exe",
+                    Arguments = configDir
+                });
+            }
+        }
+
+        ImGui.Unindent();
+    }
+
+    public static bool ShowButtonPopup(string popupId, List<string> items, out int selectedIndex)
+    {
+        selectedIndex = -1;
+        var isItemClicked = false;
+        var showPopup = true;
+
+        if (!ImGui.BeginPopupModal(popupId, ref showPopup, ImGuiWindowFlags.NoResize | ImGuiWindowFlags.AlwaysAutoResize))
+        {
+            return false;
+        }
+
+        for (var i = 0; i < items.Count; i++)
+        {
+            if (ImGui.Button(items[i]))
+            {
+                selectedIndex = i;
+                isItemClicked = true;
+                ImGui.CloseCurrentPopup();
+            }
+
+            ImGui.SameLine();
+        }
+
+        ImGui.EndPopup();
+        return isItemClicked;
+    }
+
+    public void SaveFile(FilterEditorContainer.FilterParent input, string filePath)
+    {
+        try
+        {
+            var fullPath = Path.Combine(ConfigDirectory, filePath);
+            var jsonString = JsonConvert.SerializeObject(input, Formatting.Indented);
+            File.WriteAllText(fullPath, jsonString);
+            LogMessage($"Successfully saved file to {fullPath}.", 8);
+        }
+        catch (Exception e)
+        {
+            var fullPath = Path.Combine(ConfigDirectory, filePath);
+
+            LogError($"Error saving file to {fullPath}: {e.Message}", 15);
+        }
+    }
+
+    public bool LoadOldFile(string fileName)
+    {
+        try
+        {
+            var fullPath = Path.Combine(ConfigDirectory, $"{fileName}.ifl");
+            var fileContent = File.ReadAllText(fullPath);
+
+            // Preprocess the content to remove comments
+            var contentWithoutComments = RemoveComments(fileContent);
+
+            tempConversion = JsonConvert.DeserializeObject<FilterContainerOld.FilterParent>(contentWithoutComments);
+            return true;
+        }
+        catch (Exception e)
+        {
+            var fullPath = Path.Combine(ConfigDirectory, $"{fileName}.ifl");
+            LogError($"Error loading file from {fullPath}:\n{e.Message}", 15);
+            return false;
+        }
+    }
+
+    public void LoadNewFile(string fileName)
+    {
+        try
+        {
+            var fullPath = Path.Combine(ConfigDirectory, $"{fileName}.json");
+            var fileContent = File.ReadAllText(fullPath);
+
+            // Preprocess the content to remove comments
+            var contentWithoutComments = RemoveComments(fileContent);
+
+            Settings.CurrentFilterOptions = JsonConvert.DeserializeObject<FilterEditorContainer.FilterParent>(contentWithoutComments);
+        }
+        catch (Exception e)
+        {
+            var fullPath = Path.Combine(ConfigDirectory, $"{fileName}.json");
+            LogError($"Error loading file from {fullPath}:\n{e.Message}", 15);
+        }
+    }
+
+    private string RemoveComments(string input)
+    {
+        var lines = input.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+        var cleanedLines = new List<string>();
+
+        foreach (var line in lines)
+        {
+            var commentIndex = line.IndexOf("//", StringComparison.Ordinal);
+            if (commentIndex == -1)
+            {
+                cleanedLines.Add(line);
+            }
+            else
+            {
+                var trimmedLine = line[..commentIndex].Trim();
+                if (!string.IsNullOrWhiteSpace(trimmedLine))
+                {
+                    cleanedLines.Add(trimmedLine);
+                }
+            }
+        }
+
+        return string.Join(Environment.NewLine, cleanedLines);
+    }
+
+    public List<string> GetFiles(string extension)
+    {
+        var fileList = new List<string>();
+
+        try
+        {
+            var dir = new DirectoryInfo(Path.Combine(Path.GetDirectoryName(ConfigDirectory), "Stashie"));
+
+            fileList = dir.GetFiles().Where(file => file.Extension.Equals(extension, StringComparison.CurrentCultureIgnoreCase)).Select(file => Path.GetFileNameWithoutExtension(file.Name)).ToList();
+        }
+        catch (Exception e)
+        {
+            // no
+        }
+
+        return fileList;
+    }
+
+    #endregion
 }
