@@ -28,7 +28,4 @@
       <HintPath>$(exapiPackage)\ItemFilterLibrary.dll</HintPath>
     </Reference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Example Filters\" />
-  </ItemGroup>
 </Project>

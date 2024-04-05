@@ -2,6 +2,7 @@
 using ExileCore.Shared.Interfaces;
 using ExileCore.Shared.Nodes;
 using Newtonsoft.Json;
+using Stashie.Compartments;
 using System.Collections.Generic;
 using System.Windows.Forms;
 

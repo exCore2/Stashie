@@ -2,7 +2,7 @@
 using Stashie.Filter;
 using Vector2N = System.Numerics.Vector2;
 
-namespace Stashie;
+namespace Stashie.Compartments;
 
 public class FilterResult(CustomFilter.Filter filter, ItemData itemData, Vector2N clickPos)
 {

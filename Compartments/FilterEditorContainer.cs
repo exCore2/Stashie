@@ -1,7 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
-namespace Stashie;
+namespace Stashie.Compartments;
 
 public class FilterEditorContainer
 {
@@ -18,10 +17,10 @@ public class FilterEditorContainer
 
     public class Filter
     {
+        public bool Affinity = false;
         public string FilterName;
         public string RawQuery;
         public bool Shifting = false;
-        public bool Affinity = false;
     }
 }
 
@@ -40,9 +39,9 @@ public class FilterContainerOld
 
     public class Filter
     {
+        public bool Affinity = false;
         public string FilterName;
         public List<string> RawQuery;
         public bool Shifting = false;
-        public bool Affinity = false;
     }
 }
