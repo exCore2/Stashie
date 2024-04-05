@@ -1,9 +1,8 @@
 ﻿using ExileCore.Shared.Nodes;
 
-namespace Stashie
+namespace Stashie;
+
+public class ListIndexNode : ListNode
 {
-    public class ListIndexNode : ListNode
-    {
-        public int Index;
-    }
+    public int Index;
 }

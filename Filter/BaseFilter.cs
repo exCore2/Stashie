@@ -1,13 +1,10 @@
 ﻿using ItemFilterLibrary;
 
-namespace Stashie
+namespace Stashie.Filter;
+
+public class BaseFilter : IIFilter
 {
-    public class BaseFilter : IIFilter
-    {
-        public bool BAny { get; set; }
-        public bool CompareItem(ItemData itemData, ItemQuery itemFilter)
-        {
-            return itemFilter.Matches(itemData);
-        }
-    }
+    public bool BAny { get; set; }
+
+    public bool CompareItem(ItemData itemData, ItemQuery itemFilter) => itemFilter.Matches(itemData);
 }

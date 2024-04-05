@@ -1,9 +1,8 @@
 ﻿using ItemFilterLibrary;
 
-namespace Stashie
+namespace Stashie.Filter;
+
+public interface IIFilter
 {
-    public interface IIFilter
-    {
-        bool CompareItem(ItemData itemData, ItemQuery filterData);
-    }
+    bool CompareItem(ItemData itemData, ItemQuery filterData);
 }
