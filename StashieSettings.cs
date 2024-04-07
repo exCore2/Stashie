@@ -53,23 +53,9 @@ namespace Stashie
 
         public ToggleNode Enable { get; set; }
 
-        public int[,] IgnoredCells { get; set; } =
-        {
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-        };
+        public int[,] IgnoredCells { get; set; } = new int[5, 12];
 
-        public int[,] IgnoredExpandedCells { get; set; } =
-        {
-            {0, 0, 0, 0},
-            {0, 0, 0, 0},
-            {0, 0, 0, 0},
-            {0, 0, 0, 0},
-            {0, 0, 0, 0}
-        };
+        public int[,] IgnoredExpandedCells { get; set; } = new int[5, 4];
 
         public string ConfigLastSaved { get; set; } = "";
         public string ConfigLastSelected { get; set; } = "";

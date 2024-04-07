@@ -17,23 +17,8 @@ public class StashieSettingsHandler
 {
     public static void SaveIgnoredSlotsFromInventoryTemplate()
     {
-        Main.Settings.IgnoredCells = new[,]
-        {
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-        };
-
-        Main.Settings.IgnoredExpandedCells = new[,]
-        {
-            {0, 0, 0, 0},
-            {0, 0, 0, 0},
-            {0, 0, 0, 0},
-            {0, 0, 0, 0},
-            {0, 0, 0, 0}
-        };
+        Main.Settings.IgnoredCells = new int[5, 12];
+        Main.Settings.IgnoredExpandedCells = new int[5, 4];
 
         try
         {
@@ -49,20 +34,20 @@ public class StashieSettingsHandler
         {
             Main.LogError($"{e}", 5);
         }
+    }
 
-        void UpdateIgnoredCells(InventoryHolder server_items, int[,] ignoredCells)
+    private static void UpdateIgnoredCells(InventoryHolder server_items, int[,] ignoredCells)
+    {
+        foreach (var item in server_items.Inventory.InventorySlotItems)
         {
-            foreach (var item in server_items.Inventory.InventorySlotItems)
-            {
-                var baseC = item.Item.GetComponent<Base>();
-                var itemSizeX = baseC.ItemCellsSizeX;
-                var itemSizeY = baseC.ItemCellsSizeY;
-                var inventPosX = item.PosX;
-                var inventPosY = item.PosY;
-                for (var y = 0; y < itemSizeY; y++)
-                for (var x = 0; x < itemSizeX; x++)
-                    ignoredCells[y + inventPosY, x + inventPosX] = 1;
-            }
+            var baseC = item.Item.GetComponent<Base>();
+            var itemSizeX = baseC.ItemCellsSizeX;
+            var itemSizeY = baseC.ItemCellsSizeY;
+            var inventPosX = item.PosX;
+            var inventPosY = item.PosY;
+            for (var y = 0; y < itemSizeY; y++)
+            for (var x = 0; x < itemSizeX; x++)
+                ignoredCells[y + inventPosY, x + inventPosX] = 1;
         }
     }
 
