@@ -1,5 +1,4 @@
 ﻿using ImGuiNET;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -32,13 +31,14 @@ public class StashieEditorHandler
 
         ImGui.Spacing();
 
-        if (ImGui.Button("\nConvert Old .ifl To New .json\nOld files will not be altered.\n "))
+        if (!ImGui.Button("\nConvert Old .ifl To New .json\nOld files will not be altered.\n "))
+            return;
+
+        foreach (var file in FileManager.GetFilesWithExtension(Main.ConfigDirectory, ".ifl"))
         {
-            foreach (var file in GetFiles(".ifl"))
-            {
-                if (LoadOldFile(file)) // Assuming this loads into `tempConversion` which is a FilterContainerOld.FilterParent
+            if (!FileManager.TryLoadFile<FilterContainerOld.FilterParent>(file, ".ifl", obj =>
                 {
-                    var oldData = tempConversion;
+                    var oldData = obj;
                     var newData = new FilterEditorContainer.FilterParent
                     {
                         ParentMenu = oldData.ParentMenu.Select(pm => new FilterEditorContainer.ParentMenu
@@ -54,14 +54,10 @@ public class StashieEditorHandler
                         }).ToList()
                     };
 
-                    // Serialize newData to JSON and save it
-                    var newJson = JsonConvert.SerializeObject(newData, Formatting.Indented);
-                    File.WriteAllText(Path.Combine(Main.ConfigDirectory, $"{file}.json"), newJson);
-                }
-                else
-                {
-                    Main.LogError($"Failed to load file, is it possible its not an older style?\n\t{file}", 15);
-                }
+                    FileManager.SaveToFile(newData, file);
+                }))
+            {
+                Main.LogError($"Failed to load file, is it possible its not an older style?\n\t{file}", 15);
             }
         }
     }
@@ -132,6 +128,12 @@ public class StashieEditorHandler
 
                 ImGui.SameLine();
                 var isEditing = IsCurrentEditorContext(parentIndex, filterIndex);
+
+                if (isEditing)
+                {
+                    BeginFilterEditWindow(parentIndex, filterIndex, tempFilters);
+                }
+
                 var editString = isEditing ? "Editing" : "Edit";
                 if (ImGui.Button($"{editString}"))
                 {
@@ -149,11 +151,6 @@ public class StashieEditorHandler
 
                         Editor = new EditorRecord(parentIndex, filterIndex);
                     }
-                }
-
-                if (isEditing)
-                {
-                    ConditionValueEditWindow(parentIndex, filterIndex, tempFilters);
                 }
 
                 #endregion
@@ -218,14 +215,14 @@ public class StashieEditorHandler
         {
             if (saveSelectedIndex == 0)
             {
-                SaveFile(Main.Settings.CurrentFilterOptions, $"{FileSaveName}.json");
+                FileManager.SaveToFile(Main.Settings.CurrentFilterOptions, FileSaveName);
             }
         }
 
         Main.Settings.CurrentFilterOptions.ParentMenu = tempFilters;
     }
 
-    private static void ConditionValueEditWindow(int parentIndex, int filterIndex, List<FilterEditorContainer.ParentMenu> parentMenu)
+    private static void BeginFilterEditWindow(int parentIndex, int filterIndex, List<FilterEditorContainer.ParentMenu> parentMenu)
     {
         if (Editor.GroupIndex != parentIndex || Editor.FilterIndex != filterIndex)
         {
@@ -295,22 +292,22 @@ public class StashieEditorHandler
 
         if (ImGui.Button("Save To File"))
         {
-            _files = GetFiles(".json");
+            _files = FileManager.GetFilesWithExtension(Main.ConfigDirectory, ".json");
 
             // Sanitize the file name by replacing invalid characters
             foreach (var c in Path.GetInvalidFileNameChars())
                 FileSaveName = FileSaveName.Replace(c, '_');
 
-            if (FileSaveName == string.Empty)
+            if (!string.IsNullOrEmpty(FileSaveName))
             {
-            }
-            else if (_files.Contains(FileSaveName))
-            {
-                ImGui.OpenPopup(OverwritePopup);
-            }
-            else
-            {
-                SaveFile(Main.Settings.CurrentFilterOptions, $"{FileSaveName}.json");
+                if (_files.Contains(FileSaveName))
+                {
+                    ImGui.OpenPopup(OverwritePopup);
+                }
+                else
+                {
+                    FileManager.SaveToFile(Main.Settings.CurrentFilterOptions, FileSaveName);
+                }
             }
         }
 
@@ -318,7 +315,7 @@ public class StashieEditorHandler
 
         if (ImGui.BeginCombo("Load File##LoadNewFile", SelectedFileName))
         {
-            _files = GetFiles(".json");
+            _files = FileManager.GetFilesWithExtension(Main.ConfigDirectory, ".json");
 
             foreach (var fileName in _files)
             {
@@ -328,7 +325,11 @@ public class StashieEditorHandler
                 {
                     SelectedFileName = fileName;
                     FileSaveName = fileName;
-                    LoadNewFile(fileName);
+                    FileManager.TryLoadFile<FilterEditorContainer.FilterParent>(fileName, ".json", loadedFilter =>
+                    {
+                        Main.Settings.CurrentFilterOptions = loadedFilter;
+                        ResetEditingIdentifiers();
+                    });
                 }
 
                 if (isSelected)
@@ -348,7 +349,7 @@ public class StashieEditorHandler
 
             if (!Directory.Exists(configDir))
             {
-                Main.LogError($"Path Doesnt Exist\n{configDir}");
+                Main.LogError($"Path Doesn't Exist\n{configDir}");
             }
             else
             {
@@ -388,107 +389,6 @@ public class StashieEditorHandler
 
         ImGui.EndPopup();
         return isItemClicked;
-    }
-
-    public static void SaveFile(FilterEditorContainer.FilterParent input, string filePath)
-    {
-        try
-        {
-            var fullPath = Path.Combine(Main.ConfigDirectory, filePath);
-            var jsonString = JsonConvert.SerializeObject(input, Formatting.Indented);
-            File.WriteAllText(fullPath, jsonString);
-            Main.LogMessage($"Successfully saved file to {fullPath}.", 8);
-        }
-        catch (Exception e)
-        {
-            var fullPath = Path.Combine(Main.ConfigDirectory, filePath);
-
-            Main.LogError($"Error saving file to {fullPath}: {e.Message}", 15);
-        }
-    }
-
-    public static bool LoadOldFile(string fileName)
-    {
-        try
-        {
-            var fullPath = Path.Combine(Main.ConfigDirectory, $"{fileName}.ifl");
-            var fileContent = File.ReadAllLines(fullPath);
-
-            // Preprocess the content to remove comments
-            var contentWithoutComments = RemoveComments(fileContent);
-
-            tempConversion = JsonConvert.DeserializeObject<FilterContainerOld.FilterParent>(contentWithoutComments);
-
-            return true;
-        }
-        catch (Exception e)
-        {
-            var fullPath = Path.Combine(Main.ConfigDirectory, $"{fileName}.ifl");
-            Main.LogError($"Error loading file from {fullPath}:\n{e.Message}", 15);
-            return false;
-        }
-    }
-
-    public static void LoadNewFile(string fileName)
-    {
-        try
-        {
-            var fullPath = Path.Combine(Main.ConfigDirectory, $"{fileName}.json");
-            var fileContent = File.ReadAllLines(fullPath);
-
-            // Preprocess the content to remove comments
-            var contentWithoutComments = RemoveComments(fileContent);
-
-            Main.Settings.CurrentFilterOptions = JsonConvert.DeserializeObject<FilterEditorContainer.FilterParent>(contentWithoutComments);
-            ResetEditingIdentifiers();
-        }
-        catch (Exception e)
-        {
-            var fullPath = Path.Combine(Main.ConfigDirectory, $"{fileName}.json");
-            Main.LogError($"Error loading file from {fullPath}:\n{e.Message}", 15);
-        }
-    }
-
-    public static string RemoveComments(string[] input)
-    {
-        var cleanedLines = new List<string>();
-
-        foreach (var line in input)
-        {
-            var commentIndex = line.IndexOf("//", StringComparison.CurrentCultureIgnoreCase);
-            if (commentIndex == -1)
-            {
-                cleanedLines.Add(line);
-            }
-            else
-            {
-                var trimmedLine = line[..commentIndex].Trim();
-                if (!string.IsNullOrWhiteSpace(trimmedLine))
-                {
-                    cleanedLines.Add(trimmedLine);
-                }
-            }
-        }
-
-        return string.Join(Environment.NewLine, cleanedLines);
-    }
-
-    public static List<string> GetFiles(string extension)
-    {
-        var fileList = new List<string>();
-
-        try
-        {
-            var dir = new DirectoryInfo(Path.Combine(Path.GetDirectoryName(Main.ConfigDirectory), "Stashie"));
-
-            fileList = dir.GetFiles().Where(file => file.Extension.Equals(extension, StringComparison.CurrentCultureIgnoreCase)).Select(file => Path.GetFileNameWithoutExtension(file.Name)).ToList();
-        }
-        catch
-        {
-            // no
-        }
-
-        return fileList;
     }
 
     #endregion
