@@ -11,47 +11,34 @@ namespace Stashie
     public class StashieSettings : ISettings
     {
         public List<string> AllStashNames = [];
-        public Dictionary<string, ListIndexNode> CustomFilterOptions;
-
-        public StashieSettings()
-        {
-            Enable = new ToggleNode(false);
-            DropHotkey = Keys.F3;
-            ExtraDelay = new RangeNode<int>(0, 0, 2000);
-            HoverItemDelay = new RangeNode<int>(5, 0, 2000);
-            StashItemDelay = new RangeNode<int>(5, 0, 2000);
-            CustomFilterOptions = [];
-            VisitTabWhenDone = new ToggleNode(false);
-            TabToVisitWhenDone = new RangeNode<int>(0, 0, 40);
-            BackToOriginalTab = new ToggleNode(false);
-        }
+        public Dictionary<string, ListIndexNode> CustomFilterOptions = [];
 
         [Menu("Filter File")]
         public ListNode FilterFile { get; set; } = new ListNode();
 
         [Menu("Stash Hotkey")]
-        public HotkeyNode DropHotkey { get; set; }
+        public HotkeyNode DropHotkey { get; set; } = Keys.F3;
 
         [Menu("Extra Delay", "Delay to wait after each inventory clearing attempt(in ms).")]
-        public RangeNode<int> ExtraDelay { get; set; }
+        public RangeNode<int> ExtraDelay { get; set; } = new(0, 0, 2000);
 
-        [Menu("HoverItem Delay", "Delay used to wait inbetween checks for the Hoveritem (in ms).")]
-        public RangeNode<int> HoverItemDelay { get; set; }
+        [Menu("HoverItem Delay", "Delay used to wait between checks for the Hover item (in ms).")]
+        public RangeNode<int> HoverItemDelay { get; set; } = new(5, 0, 2000);
 
         [Menu("StashItem Delay", "Delay used to wait after moving the mouse on an item to Stash until clicking it(in ms).")]
-        public RangeNode<int> StashItemDelay { get; set; }
+        public RangeNode<int> StashItemDelay { get; set; } = new(5, 0, 2000);
 
         [Menu("When done, go to tab.",
             "After Stashie has dropped all items to their respective tabs, then go to the set tab.")]
-        public ToggleNode VisitTabWhenDone { get; set; }
+        public ToggleNode VisitTabWhenDone { get; set; } = new(false);
 
         [Menu("tab (index)")]
-        public RangeNode<int> TabToVisitWhenDone { get; set; }
+        public RangeNode<int> TabToVisitWhenDone { get; set; } = new(0, 0, 40);
 
         [Menu("Go back to the tab you were in prior to Stashing")]
-        public ToggleNode BackToOriginalTab { get; set; }
+        public ToggleNode BackToOriginalTab { get; set; } = new(false);
 
-        public ToggleNode Enable { get; set; }
+        public ToggleNode Enable { get; set; } = new(false);
 
         public int[,] IgnoredCells { get; set; } = new int[5, 12];
 
