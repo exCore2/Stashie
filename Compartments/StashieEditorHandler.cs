@@ -16,6 +16,7 @@ public class StashieEditorHandler
     public const string FilterEditPopup = "Stashie Filter (Multi-Line)";
     public static string _editorGroupFilter = "";
     public static string _editorQueryFilter = "";
+    public static string _editorQueryContentFilter = "";
     public static string FileSaveName = "";
     public static string SelectedFileName = "";
 
@@ -79,6 +80,7 @@ public class StashieEditorHandler
 
         ImGui.InputTextWithHint("Filter Groups", "Group...", ref _editorGroupFilter, 100);
         ImGui.InputTextWithHint("Filter Queries", "Query...", ref _editorQueryFilter, 100);
+        ImGui.InputTextWithHint("Filter Query Content", "Query Content...", ref _editorQueryContentFilter, 100);
 
         for (var parentIndex = 0; parentIndex < tempFilters.Count; parentIndex++)
         {
@@ -89,6 +91,9 @@ public class StashieEditorHandler
                 continue;
 
             if (currentParent.Filters.All(x => !x.FilterName.Contains(_editorQueryFilter, StringComparison.InvariantCultureIgnoreCase)))
+                continue;
+
+            if (currentParent.Filters.All(x => !x.RawQuery.Contains(_editorQueryContentFilter, StringComparison.InvariantCultureIgnoreCase)))
                 continue;
 
             ImGui.BeginChild("parentFilterGroup", Vector2N.Zero, ImGuiChildFlags.Border | ImGuiChildFlags.AutoResizeY);
@@ -115,15 +120,18 @@ public class StashieEditorHandler
             {
                 ImGui.PushID(filterIndex);
                 var currentFilter = currentParent.Filters[filterIndex];
-                if (!currentFilter.FilterName.ToLowerInvariant().Contains(_editorQueryFilter))
+                if (!currentFilter.FilterName.Contains(_editorQueryFilter, StringComparison.InvariantCultureIgnoreCase))
+                    continue;
+
+                if (!currentFilter.RawQuery.Contains(_editorQueryContentFilter, StringComparison.InvariantCultureIgnoreCase))
                     continue;
 
                 ImGui.InputTextWithHint("", "\"Heist Items\" etc..", ref tempFilters[parentIndex].Filters[filterIndex].FilterName, 200);
 
                 ImGui.SameLine();
-                ImGui.Checkbox("Shifting", ref currentFilter.Shifting);
+                CheckboxWithTooltip("Shifting", ref currentFilter.Shifting, "Holds Shift to bypass Tab Affinity.");
                 ImGui.SameLine();
-                ImGui.Checkbox("Affinity", ref currentFilter.Affinity);
+                CheckboxWithTooltip("Affinity", ref currentFilter.Affinity, "Assumes Affinity is set and won't change to selected stash tab\nwhen stashing items.");
 
                 #region Edit Button NEW
 
@@ -262,12 +270,23 @@ public class StashieEditorHandler
             ResetEditingIdentifiers();
         }
 
-        ImGui.Checkbox("Shifting", ref tempCondValue.Shifting);
-        ImGui.Checkbox("Affinity", ref tempCondValue.Affinity);
+        CheckboxWithTooltip("Shifting", ref tempCondValue.Shifting, "Holds Shift to bypass Tab Affinity.");
+        CheckboxWithTooltip("Affinity", ref tempCondValue.Affinity, "Assumes Affinity is set and won't change to selected stash tab\nwhen stashing items.");
 
         ImGui.InputTextMultiline("##text_edit", ref tempCondValue.RawQuery, 15000, ImGui.GetContentRegionAvail(), ImGuiInputTextFlags.AllowTabInput);
 
         ImGui.End();
+    }
+
+    public static void CheckboxWithTooltip(string label, ref bool value, string tooltip)
+    {
+        ImGui.Checkbox(label, ref value);
+        ImGui.SameLine();
+        ImGui.TextDisabled("(?)");
+        if (ImGui.IsItemHovered(ImGuiHoveredFlags.None))
+        {
+            ImGui.SetTooltip(tooltip);
+        }
     }
 
     private static void ResetEditingIdentifiers()
