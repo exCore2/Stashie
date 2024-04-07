@@ -23,6 +23,17 @@ internal class ActionCoRoutine
         ActionsHandler.CleanUp();
     }
 
+    public static IEnumerator ProcessSwitchToTab(int index)
+    {
+        Main.DebugTimer.Restart();
+        yield return ActionsHandler.SwitchToTab(index);
+        Main.CoroutineWorker = Core.ParallelRunner.FindByName(CoroutineName);
+        Main.CoroutineWorker?.Done();
+
+        Main.DebugTimer.Restart();
+        Main.DebugTimer.Stop();
+    }
+
     public static IEnumerator DropToStashRoutine()
     {
         var cursorPosPreMoving = Input.ForceMousePositionNum;
@@ -32,7 +43,9 @@ internal class ActionCoRoutine
         yield return FilterManager.ParseItems();
         for (var tries = 0; tries < 3 && Main.DropItems.Count > 0; ++tries)
         {
-            if (Main.DropItems.Count > 0) yield return ActionsHandler.StashItemsIncrementer();
+            if (Main.DropItems.Count > 0)
+                yield return ActionsHandler.StashItemsIncrementer();
+
             yield return FilterManager.ParseItems();
             yield return new WaitTime(Main.Settings.ExtraDelay);
         }

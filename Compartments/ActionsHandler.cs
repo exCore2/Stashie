@@ -1,11 +1,11 @@
 ﻿using ExileCore;
 using ExileCore.Shared;
 using ExileCore.Shared.Enums;
+using Stashie.Classes;
 using System;
 using System.Collections;
 using System.Linq;
 using System.Windows.Forms;
-using static ExileCore.PoEMemory.MemoryObjects.ServerInventory;
 using static Stashie.StashieCore;
 
 namespace Stashie.Compartments;
@@ -25,7 +25,7 @@ internal class ActionsHandler
         switch (tab)
         {
             case int index:
-                Main.CoroutineWorker = new Coroutine(Main.ProcessSwitchToTab(index), Main, CoroutineName);
+                Main.CoroutineWorker = new Coroutine(ActionCoRoutine.ProcessSwitchToTab(index), Main, CoroutineName);
                 break;
 
             case string name:
@@ -36,7 +36,7 @@ internal class ActionsHandler
                 }
 
                 var tempIndex = RenamedAllStashNames.IndexOf(name);
-                Main.CoroutineWorker = new Coroutine(Main.ProcessSwitchToTab(tempIndex), Main, CoroutineName);
+                Main.CoroutineWorker = new Coroutine(ActionCoRoutine.ProcessSwitchToTab(tempIndex), Main, CoroutineName);
                 DebugWindow.LogMsg($"{Main.Name}: Switching to tab with index: {tempIndex} ('{name}').");
                 break;
 
@@ -52,7 +52,8 @@ internal class ActionsHandler
     {
         Main.VisibleStashIndex = GetIndexOfCurrentVisibleTab();
         var travelDistance = Math.Abs(tabIndex - Main.VisibleStashIndex);
-        if (travelDistance == 0) yield break;
+        if (travelDistance == 0)
+            yield break;
 
         yield return SwitchToTabViaArrowKeys(tabIndex);
 
@@ -106,18 +107,6 @@ internal class ActionsHandler
         return stashPanelVisibleStash?.InvType ?? InventoryType.InvalidInventory;
     }
 
-    public static bool CheckIgnoreCells(InventSlotItem inventItem, (int Width, int Height) containerSize, int[,] ignoredCells)
-    {
-        var inventPosX = inventItem.PosX;
-        var inventPosY = inventItem.PosY;
-
-        if (inventPosX < 0 || inventPosX >= containerSize.Width) return true;
-
-        if (inventPosY < 0 || inventPosY >= containerSize.Height) return true;
-
-        return ignoredCells[inventPosY, inventPosX] != 0; //No need to check all item size
-    }
-
     public static IEnumerator StashItemsIncrementer()
     {
         Main.CoroutineIteration++;
@@ -147,7 +136,8 @@ internal class ActionsHandler
             var maxTryTime = Main.DebugTimer.ElapsedMilliseconds + 2000;
 
             //move to correct tab
-            if (!stashResult.SkipSwitchTab) yield return SwitchToTab(stashResult.StashIndex);
+            if (!stashResult.SkipSwitchTab)
+                yield return SwitchToTab(stashResult.StashIndex);
 
             yield return new WaitFunctionTimed(() => Main.GameController.IngameState.IngameUi.StashElement.AllInventories[Main.VisibleStashIndex] != null, true, 2000,
                 $"Error while loading tab, Index: {Main.VisibleStashIndex}"); //maybe replace waittime with Setting option

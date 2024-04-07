@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 
-namespace Stashie.Compartments;
+namespace Stashie.Classes;
 
-public class FilterEditorContainer
+public class FilterEditor
 {
     public class FilterParent
     {
@@ -24,7 +24,7 @@ public class FilterEditorContainer
     }
 }
 
-public class FilterContainerOld
+public class FilterEditorOld
 {
     public class FilterParent
     {

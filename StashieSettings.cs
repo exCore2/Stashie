@@ -2,7 +2,7 @@
 using ExileCore.Shared.Interfaces;
 using ExileCore.Shared.Nodes;
 using Newtonsoft.Json;
-using Stashie.Compartments;
+using Stashie.Classes;
 using System.Collections.Generic;
 using System.Windows.Forms;
 
@@ -47,6 +47,6 @@ namespace Stashie
         public string ConfigLastSaved { get; set; } = "";
         public string ConfigLastSelected { get; set; } = "";
 
-        public FilterEditorContainer.FilterParent CurrentFilterOptions { get; set; } = new FilterEditorContainer.FilterParent();
+        public FilterEditor.FilterParent CurrentFilterOptions { get; set; } = new FilterEditor.FilterParent();
     }
 }

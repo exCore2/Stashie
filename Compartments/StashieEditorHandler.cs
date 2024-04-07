@@ -1,4 +1,5 @@
 ﻿using ImGuiNET;
+using Stashie.Classes;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -19,9 +20,9 @@ public class StashieEditorHandler
     public static string SelectedFileName = "";
 
     public static List<string> _files = [];
-    public static FilterEditorContainer.Filter condEditValue = new();
-    public static FilterEditorContainer.Filter tempCondValue = new();
-    public static FilterContainerOld.FilterParent tempConversion = new();
+    public static FilterEditor.Filter condEditValue = new();
+    public static FilterEditor.Filter tempCondValue = new();
+    public static FilterEditorOld.FilterParent tempConversion = new();
 
     #region Filter Editor Seciton
 
@@ -36,15 +37,15 @@ public class StashieEditorHandler
 
         foreach (var file in FileManager.GetFilesWithExtension(Main.ConfigDirectory, ".ifl"))
         {
-            if (!FileManager.TryLoadFile<FilterContainerOld.FilterParent>(file, ".ifl", obj =>
+            if (!FileManager.TryLoadFile<FilterEditorOld.FilterParent>(file, ".ifl", obj =>
                 {
                     var oldData = obj;
-                    var newData = new FilterEditorContainer.FilterParent
+                    var newData = new FilterEditor.FilterParent
                     {
-                        ParentMenu = oldData.ParentMenu.Select(pm => new FilterEditorContainer.ParentMenu
+                        ParentMenu = oldData.ParentMenu.Select(pm => new FilterEditor.ParentMenu
                         {
                             MenuName = pm.MenuName,
-                            Filters = pm.Filters.Select(f => new FilterEditorContainer.Filter
+                            Filters = pm.Filters.Select(f => new FilterEditor.Filter
                             {
                                 FilterName = f.FilterName,
                                 RawQuery = string.Join("\n", f.RawQuery),
@@ -67,7 +68,7 @@ public class StashieEditorHandler
         if (Main.Settings.CurrentFilterOptions.ParentMenu == null)
             return;
 
-        var tempFilters = new List<FilterEditorContainer.ParentMenu>(Main.Settings.CurrentFilterOptions.ParentMenu);
+        var tempFilters = new List<FilterEditor.ParentMenu>(Main.Settings.CurrentFilterOptions.ParentMenu);
 
         if (!ImGui.CollapsingHeader("Filters", ImGuiTreeNodeFlags.DefaultOpen))
             return;
@@ -143,10 +144,10 @@ public class StashieEditorHandler
                     }
                     else
                     {
-                        condEditValue = new FilterEditorContainer.Filter
+                        condEditValue = new FilterEditor.Filter
                             {FilterName = currentFilter.FilterName, Affinity = currentFilter.Affinity, RawQuery = currentFilter.RawQuery, Shifting = currentFilter.Shifting};
 
-                        tempCondValue = new FilterEditorContainer.Filter
+                        tempCondValue = new FilterEditor.Filter
                             {FilterName = currentFilter.FilterName, Affinity = currentFilter.Affinity, RawQuery = currentFilter.RawQuery, Shifting = currentFilter.Shifting};
 
                         Editor = new EditorRecord(parentIndex, filterIndex);
@@ -168,7 +169,7 @@ public class StashieEditorHandler
             if (ImGui.Button("[=] Add New Filter"))
             {
                 ResetEditingIdentifiers();
-                tempFilters[parentIndex].Filters.Add(new FilterEditorContainer.Filter {FilterName = "", RawQuery = "", Affinity = false, Shifting = false});
+                tempFilters[parentIndex].Filters.Add(new FilterEditor.Filter {FilterName = "", RawQuery = "", Affinity = false, Shifting = false});
             }
 
             #endregion
@@ -206,7 +207,7 @@ public class StashieEditorHandler
         if (ImGui.Button("[=] Add New Group"))
         {
             ResetEditingIdentifiers();
-            tempFilters.Add(new FilterEditorContainer.ParentMenu {MenuName = "", Filters = [new FilterEditorContainer.Filter {FilterName = "", RawQuery = "", Affinity = false, Shifting = false}]});
+            tempFilters.Add(new FilterEditor.ParentMenu {MenuName = "", Filters = [new FilterEditor.Filter {FilterName = "", RawQuery = "", Affinity = false, Shifting = false}]});
         }
 
         #endregion
@@ -222,7 +223,7 @@ public class StashieEditorHandler
         Main.Settings.CurrentFilterOptions.ParentMenu = tempFilters;
     }
 
-    private static void BeginFilterEditWindow(int parentIndex, int filterIndex, List<FilterEditorContainer.ParentMenu> parentMenu)
+    private static void BeginFilterEditWindow(int parentIndex, int filterIndex, List<FilterEditor.ParentMenu> parentMenu)
     {
         if (Editor.GroupIndex != parentIndex || Editor.FilterIndex != filterIndex)
         {
@@ -251,8 +252,7 @@ public class StashieEditorHandler
 
         if (ImGui.Button("Revert"))
         {
-            tempCondValue = new FilterEditorContainer.Filter
-                {FilterName = condEditValue.FilterName, Affinity = condEditValue.Affinity, RawQuery = condEditValue.RawQuery, Shifting = condEditValue.Shifting};
+            tempCondValue = new FilterEditor.Filter {FilterName = condEditValue.FilterName, Affinity = condEditValue.Affinity, RawQuery = condEditValue.RawQuery, Shifting = condEditValue.Shifting};
         }
 
         ImGui.SameLine();
@@ -325,7 +325,7 @@ public class StashieEditorHandler
                 {
                     SelectedFileName = fileName;
                     FileSaveName = fileName;
-                    FileManager.TryLoadFile<FilterEditorContainer.FilterParent>(fileName, ".json", loadedFilter =>
+                    FileManager.TryLoadFile<FilterEditor.FilterParent>(fileName, ".json", loadedFilter =>
                     {
                         Main.Settings.CurrentFilterOptions = loadedFilter;
                         ResetEditingIdentifiers();

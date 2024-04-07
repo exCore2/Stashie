@@ -1,5 +1,5 @@
 ﻿using ItemFilterLibrary;
-using Stashie.Compartments;
+using Stashie.Classes;
 using System.Collections.Generic;
 
 namespace Stashie.Filter;

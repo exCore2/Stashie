@@ -1,6 +1,7 @@
 ﻿using ExileCore;
 using ItemFilterLibrary;
 using Newtonsoft.Json;
+using Stashie.Classes;
 using Stashie.Filter;
 using System;
 using System.Collections.Generic;
@@ -8,7 +9,7 @@ using System.IO;
 
 namespace Stashie.Compartments;
 
-public class FilterParser
+public class FilterFileHandler
 {
     public static List<CustomFilter> Load(string fileName, string filePath)
     {
@@ -18,7 +19,7 @@ public class FilterParser
         {
             var fileContents = File.ReadAllText(filePath);
 
-            var newFilters = JsonConvert.DeserializeObject<IFL>(fileContents);
+            var newFilters = JsonConvert.DeserializeObject<IFL.Parent>(fileContents);
 
             foreach (var parentMenu in newFilters.ParentMenu)
             {
@@ -30,11 +31,8 @@ public class FilterParser
                 foreach (var filter in parentMenu.Filters)
                 {
                     var compiledQuery = ItemQuery.Load(filter.RawQuery.Replace("\n", ""));
-
-                    // Check if there was an error during processing and set the flag accordingly
                     var filterErrorParse = compiledQuery.FailedToCompile;
 
-                    // Add the parsed filter to the list if no parsing errors were encountered; otherwise, log an error message. FilterLibrary should return an error if it was incorrect anyway.
                     if (filterErrorParse)
                     {
                         DebugWindow.LogError($"[Stashie] JSON Error loading. Parent: {parentMenu.MenuName}, Filter: {filter.FilterName}", 15);
@@ -52,7 +50,8 @@ public class FilterParser
                     }
                 }
 
-                if (newParent.Filters.Count > 0) allFilters.Add(newParent);
+                if (newParent.Filters.Count > 0)
+                    allFilters.Add(newParent);
             }
         }
         catch (Exception ex)
@@ -60,30 +59,6 @@ public class FilterParser
             DebugWindow.LogError($"[Stashie] Failed Loading filter {fileName}\nException: {ex.Message}", 15);
         }
 
-        // Return the list of all parsed CustomFilter objects
         return allFilters;
-    }
-
-    public class IFL
-    {
-        public ParentMenu[] ParentMenu { get; set; }
-    }
-
-    public class ParentMenu
-    {
-        public string MenuName { get; set; }
-
-        public List<Filter> Filters { get; set; }
-    }
-
-    public class Filter
-    {
-        public string FilterName { get; set; }
-
-        public string RawQuery { get; set; }
-
-        public bool? Shifting { get; set; }
-
-        public bool? Affinity { get; set; }
     }
 }

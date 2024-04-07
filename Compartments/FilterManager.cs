@@ -4,6 +4,7 @@ using ExileCore.Shared.Enums;
 using ExileCore.Shared.Helpers;
 using ItemFilterLibrary;
 using SharpDX;
+using Stashie.Classes;
 using System;
 using System.Collections;
 using System.IO;
@@ -38,7 +39,7 @@ internal class FilterManager
             var filterFilePath = Path.Combine(pickitConfigFileDirectory, $"{Main.Settings.FilterFile.Value}.json");
             if (File.Exists(filterFilePath))
             {
-                Main.currentFilter = FilterParser.Load($"{Main.Settings.FilterFile.Value}.json", filterFilePath);
+                Main.currentFilter = FilterFileHandler.Load($"{Main.Settings.FilterFile.Value}.json", filterFilePath);
 
                 foreach (var customFilter in Main.currentFilter)
                 {
@@ -71,9 +72,11 @@ internal class FilterManager
             {
                 try
                 {
-                    if (!subFilter.AllowProcess) continue;
+                    if (!subFilter.AllowProcess)
+                        continue;
 
-                    if (filter.CompareItem(itemData, subFilter.CompiledQuery)) return new FilterResult(subFilter, itemData, clickPos);
+                    if (filter.CompareItem(itemData, subFilter.CompiledQuery))
+                        return new FilterResult(subFilter, itemData, clickPos);
                 }
                 catch (Exception ex)
                 {
@@ -96,12 +99,16 @@ internal class FilterManager
 
         foreach (var invItem in invItems)
         {
-            if (invItem.Item == null || invItem.Address == 0) continue;
-            if (ActionsHandler.CheckIgnoreCells(invItem, (12, 5), Main.Settings.IgnoredCells)) continue;
+            if (invItem.Item == null || invItem.Address == 0)
+                continue;
+
+            if (Utility.CheckIgnoreCells(invItem, (12, 5), Main.Settings.IgnoredCells))
+                continue;
 
             var testItem = new ItemData(invItem.Item, Main.GameController);
             var result = CheckFilters(testItem, invItem.GetClientRect().Center.ToVector2Num());
-            if (result != null) Main.DropItems.Add(result);
+            if (result != null)
+                Main.DropItems.Add(result);
         }
 
         if (Main.GameController.IngameState.IngameUi.InventoryPanel[InventoryIndex.PlayerExpandedInventory].IsVisible)
@@ -110,12 +117,16 @@ internal class FilterManager
 
             foreach (var expandedInvItem in inventoryInventorySlotItems)
             {
-                if (expandedInvItem.Item == null || expandedInvItem.Address == 0) continue;
-                if (ActionsHandler.CheckIgnoreCells(expandedInvItem, (4, 5), Main.Settings.IgnoredExpandedCells)) continue;
+                if (expandedInvItem.Item == null || expandedInvItem.Address == 0)
+                    continue;
+
+                if (Utility.CheckIgnoreCells(expandedInvItem, (4, 5), Main.Settings.IgnoredExpandedCells))
+                    continue;
 
                 var testItem = new ItemData(expandedInvItem.Item, Main.GameController);
                 var result = CheckFilters(testItem, GetExpandedClientRect(expandedInvItem).Center.ToVector2Num());
-                if (result != null) Main.DropItems.Add(result);
+                if (result != null)
+                    Main.DropItems.Add(result);
             }
         }
     }

@@ -4,6 +4,7 @@ using ExileCore.PoEMemory.MemoryObjects;
 using ExileCore.Shared.Enums;
 using ImGuiNET;
 using SharpDX;
+using Stashie.Classes;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -70,7 +71,8 @@ public class StashieSettingsHandler
                         ImGui.Columns(2, strId, true);
                         ImGui.SetColumnWidth(0, 320);
 
-                        if (ImGui.Button(strId, new Vector2N(300, 20))) ImGui.OpenPopup(strId);
+                        if (ImGui.Button(strId, new Vector2N(300, 20)))
+                            ImGui.OpenPopup(strId);
 
                         ImGui.SameLine();
                         ImGui.NextColumn();
@@ -78,7 +80,8 @@ public class StashieSettingsHandler
                         var item = indexNode.Index + 1;
                         var filterName = filter.FilterName;
 
-                        if (string.IsNullOrWhiteSpace(filterName)) filterName = "Null";
+                        if (string.IsNullOrWhiteSpace(filterName))
+                            filterName = "Null";
 
                         if (ImGui.Combo($"##{parent.ParentMenuName + filter.FilterName}", ref item, Main.StashTabNamesByIndex, Main.StashTabNamesByIndex.Length))
                         {
@@ -105,7 +108,9 @@ public class StashieSettingsHandler
                         ImGui.Columns(1, "", false);
                         var pop = true;
 
-                        if (!ImGui.BeginPopupModal(strId, ref pop, ImGuiWindowFlags.NoResize | ImGuiWindowFlags.AlwaysAutoResize)) continue;
+                        if (!ImGui.BeginPopupModal(strId, ref pop, ImGuiWindowFlags.NoResize | ImGuiWindowFlags.AlwaysAutoResize))
+                            continue;
+
                         var x = 0;
 
                         foreach (var name in RenamedAllStashNames)
@@ -119,12 +124,14 @@ public class StashieSettingsHandler
                                 ImGui.CloseCurrentPopup();
                             }
 
-                            if (x % 10 != 0) ImGui.SameLine();
+                            if (x % 10 != 0)
+                                ImGui.SameLine();
                         }
 
                         ImGui.Spacing();
                         ImGuiNative.igIndent(350);
-                        if (ImGui.Button("Close", new Vector2N(100, 20))) ImGui.CloseCurrentPopup();
+                        if (ImGui.Button("Close", new Vector2N(100, 20)))
+                            ImGui.CloseCurrentPopup();
 
                         ImGui.EndPopup();
                     }
@@ -137,7 +144,9 @@ public class StashieSettingsHandler
 
     public static void DrawReloadConfigButton()
     {
-        if (!ImGui.Button("Reload config")) return;
+        if (!ImGui.Button("Reload config"))
+            return;
+
         FilterManager.LoadCustomFilters();
         GenerateTabMenu();
         DebugWindow.LogMsg("Reloaded Stashie config", 2, Color.LimeGreen);
@@ -147,11 +156,13 @@ public class StashieSettingsHandler
     {
         try
         {
-            if (ImGui.Button("Copy Inventory")) SaveIgnoredSlotsFromInventoryTemplate();
+            if (ImGui.Button("Copy Inventory"))
+                SaveIgnoredSlotsFromInventoryTemplate();
 
             ImGui.SameLine();
             ImGui.TextDisabled("(?)");
-            if (ImGui.IsItemHovered()) ImGui.SetTooltip($"Checked = Item will be ignored{Environment.NewLine}UnChecked = Item will be processed");
+            if (ImGui.IsItemHovered())
+                ImGui.SetTooltip($"Checked = Item will be ignored{Environment.NewLine}UnChecked = Item will be processed");
         }
         catch (Exception e)
         {
@@ -166,9 +177,11 @@ public class StashieSettingsHandler
         for (var j = 0; j < 4; j++)
         {
             var toggled = Convert.ToBoolean(Main.Settings.IgnoredExpandedCells[i, j]);
-            if (ImGui.Checkbox($"##{numb}IgnoredBackpackInventoryCells", ref toggled)) Main.Settings.IgnoredExpandedCells[i, j] ^= 1;
+            if (ImGui.Checkbox($"##{numb}IgnoredBackpackInventoryCells", ref toggled))
+                Main.Settings.IgnoredExpandedCells[i, j] ^= 1;
 
-            if ((numb - 1) % 4 < 3) ImGui.SameLine();
+            if ((numb - 1) % 4 < 3)
+                ImGui.SameLine();
 
             numb += 1;
         }
@@ -179,9 +192,11 @@ public class StashieSettingsHandler
         for (var j = 0; j < 12; j++)
         {
             var toggled = Convert.ToBoolean(Main.Settings.IgnoredCells[i, j]);
-            if (ImGui.Checkbox($"##{numb}IgnoredMainInventoryCells", ref toggled)) Main.Settings.IgnoredCells[i, j] ^= 1;
+            if (ImGui.Checkbox($"##{numb}IgnoredMainInventoryCells", ref toggled))
+                Main.Settings.IgnoredCells[i, j] ^= 1;
 
-            if ((numb - 1) % 12 < 11) ImGui.SameLine();
+            if ((numb - 1) % 12 < 11)
+                ImGui.SameLine();
 
             numb += 1;
         }

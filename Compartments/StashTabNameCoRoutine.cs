@@ -1,68 +1,23 @@
 ﻿using ExileCore;
 using ExileCore.Shared;
+using Stashie.Classes;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using static Stashie.StashieCore;
 
 namespace Stashie.Compartments;
 
 internal class StashTabNameCoRoutine
 {
-    public static readonly WaitTime Wait2Sec = new WaitTime(2000);
-    public static readonly WaitTime Wait1Sec = new WaitTime(1000);
+    public static readonly WaitTime Wait2Sec = new(2000);
+    public static readonly WaitTime Wait1Sec = new(1000);
     public static long _counterStashTabNamesCoroutine;
 
     public static void InitStashTabNameCoRoutine()
     {
         Main.StashTabNamesCoroutine = new Coroutine(StashTabNamesUpdater_Thread(), Main, StashTabsNameChecker);
         Core.ParallelRunner.Run(Main.StashTabNamesCoroutine);
-    }
-
-    public static void OnSettingsStashNameChanged(ListIndexNode node, string newValue)
-    {
-        node.Index = GetInventIndexByStashName(newValue);
-    }
-
-    public static void SetupOrClose()
-    {
-        SaveDefaultConfigsToDisk();
-        Main.SettingsListNodes = new List<ListIndexNode>(100);
-        FilterManager.LoadCustomFilters();
-
-        try
-        {
-            Main.Settings.TabToVisitWhenDone.Max = (int)Main.GameController.Game.IngameState.IngameUi.StashElement.TotalStashes - 1;
-            var names = Main.GameController.Game.IngameState.IngameUi.StashElement.AllStashNames;
-            UpdateStashNames(names);
-        }
-        catch (Exception e)
-        {
-            Main.LogError($"Cant get stash names when init. {e}");
-        }
-    }
-
-    public static void WriteToNonExistentFile(string path, string content)
-    {
-        if (File.Exists(path)) return;
-
-        if (path == null) return;
-
-        using var streamWriter = new StreamWriter(path, true);
-        streamWriter.Write(content);
-        streamWriter.Close();
-    }
-
-    public static void SaveDefaultConfigsToDisk() =>
-        WriteToNonExistentFile($"{Main.ConfigDirectory}\\example filter.txt", "https://github.com/DetectiveSquirrel/Stashie/blob/master/Example%20Filter/Example.json");
-
-    public static int GetInventIndexByStashName(string name)
-    {
-        var index = RenamedAllStashNames.IndexOf(name);
-        if (index != -1) index--;
-
-        return index;
     }
 
     public static void UpdateStashNames(ICollection<string> newNames)
@@ -144,15 +99,31 @@ internal class StashTabNameCoRoutine
         StashieSettingsHandler.GenerateTabMenu();
     }
 
+    public static void OnSettingsStashNameChanged(ListIndexNode node, string newValue)
+    {
+        node.Index = GetInventIndexByStashName(newValue);
+    }
+
+    public static int GetInventIndexByStashName(string name)
+    {
+        var index = RenamedAllStashNames.IndexOf(name);
+        if (index != -1)
+            index--;
+
+        return index;
+    }
+
     public static IEnumerator StashTabNamesUpdater_Thread()
     {
         while (true)
         {
-            while (!Main.GameController.Game.IngameState.InGame) yield return Wait2Sec;
+            while (!Main.GameController.Game.IngameState.InGame)
+                yield return Wait2Sec;
 
             var stashPanel = Main.GameController.Game.IngameState?.IngameUi?.StashElement;
 
-            while (stashPanel == null || !stashPanel.IsVisibleLocal) yield return Wait1Sec;
+            while (stashPanel == null || !stashPanel.IsVisibleLocal)
+                yield return Wait1Sec;
 
             _counterStashTabNamesCoroutine++;
             Main.StashTabNamesCoroutine?.UpdateTicks(_counterStashTabNamesCoroutine);
@@ -168,7 +139,8 @@ internal class StashTabNameCoRoutine
             for (var index = 0; index < realNames.Count; ++index)
             {
                 var cachedName = cachedNames[index + 1];
-                if (cachedName.Equals(realNames[index])) continue;
+                if (cachedName.Equals(realNames[index]))
+                    continue;
 
                 UpdateStashNames(realNames);
                 break;

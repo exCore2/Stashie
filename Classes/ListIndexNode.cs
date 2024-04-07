@@ -1,6 +1,6 @@
 ﻿using ExileCore.Shared.Nodes;
 
-namespace Stashie.Compartments;
+namespace Stashie.Classes;
 
 public class ListIndexNode : ListNode
 {

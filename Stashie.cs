@@ -1,6 +1,7 @@
 ﻿using ExileCore;
 using ExileCore.Shared;
 using ImGuiNET;
+using Stashie.Classes;
 using Stashie.Compartments;
 using Stashie.Filter;
 using System;
@@ -52,14 +53,14 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
                 StashTabNamesCoroutine?.Pause();
             }
 
-            StashTabNameCoRoutine.SetupOrClose();
+            Utility.SetupOrClose();
         };
 
         StashieEditorHandler.FileSaveName = Settings.ConfigLastSaved;
         StashieEditorHandler.SelectedFileName = Settings.ConfigLastSaved;
 
         StashTabNameCoRoutine.InitStashTabNameCoRoutine();
-        StashTabNameCoRoutine.SetupOrClose();
+        Utility.SetupOrClose();
 
         Input.RegisterKey(Settings.DropHotkey);
 
@@ -151,15 +152,4 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
     }
 
     public bool StashingRequirementsMet() => GameController.Game.IngameState.IngameUi.InventoryPanel.IsVisible && GameController.Game.IngameState.IngameUi.StashElement.IsVisibleLocal;
-
-    public IEnumerator ProcessSwitchToTab(int index)
-    {
-        DebugTimer.Restart();
-        yield return ActionsHandler.SwitchToTab(index);
-        CoroutineWorker = Core.ParallelRunner.FindByName(CoroutineName);
-        CoroutineWorker?.Done();
-
-        DebugTimer.Restart();
-        DebugTimer.Stop();
-    }
 }
