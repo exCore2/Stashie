@@ -114,6 +114,14 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
             case "switch_to_tab":
                 ActionsHandler.HandleSwitchToTabEvent(args);
                 break;
+
+            case "start_stashie":
+                if (Core.ParallelRunner.FindByName(CoroutineName) == null)
+                {
+                    ActionCoRoutine.StartDropItemsToStashCoroutine();
+                }
+
+                break;
         }
     }
 

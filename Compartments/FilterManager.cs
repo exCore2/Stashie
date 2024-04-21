@@ -129,6 +129,29 @@ internal class FilterManager
                     Main.DropItems.Add(result);
             }
         }
+
+        #region Ignore 1 max stack of wisdoms/portals
+
+        if (Main.Settings.KeepHighestIDStack)
+        {
+            KeepHighestStackItem("Scroll of Wisdom");
+        }
+
+        if (Main.Settings.KeepHighestTPStack)
+        {
+            KeepHighestStackItem("Portal Scroll");
+        }
+
+        void KeepHighestStackItem(string itemName)
+        {
+            var items = Main.DropItems.Where(item => item.ItemData.BaseName == itemName).ToList();
+            if (items.Count == 0) return;
+            var maxStackItem = items.MaxBy(item => item.ItemData.StackInfo.Count);
+            if (maxStackItem == null) return;
+            Main.DropItems.Remove(maxStackItem);
+        }
+
+        #endregion
     }
 
     public static RectangleF GetExpandedClientRect(InventSlotItem item)

@@ -148,7 +148,6 @@ internal class ActionsHandler
             yield return StashItem(stashResult);
 
             Main.DebugTimer.Restart();
-            Main.PublishEvent("stashie_finish_drop_items_to_stash_tab", null);
         }
     }
 

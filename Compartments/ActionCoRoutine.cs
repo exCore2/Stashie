@@ -21,6 +21,7 @@ internal class ActionCoRoutine
         Main.DebugTimer.Stop();
         Main.DebugTimer.Reset();
         ActionsHandler.CleanUp();
+        Main.PublishEvent("stashie_finish_drop_items_to_stash_tab", null);
     }
 
     public static IEnumerator ProcessSwitchToTab(int index)

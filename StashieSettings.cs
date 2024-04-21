@@ -38,6 +38,12 @@ namespace Stashie
         [Menu("Go back to the tab you were in prior to Stashing")]
         public ToggleNode BackToOriginalTab { get; set; } = new(false);
 
+        [Menu("Keep Highest TP Scroll Stack")]
+        public ToggleNode KeepHighestTPStack { get; set; } = new(false);
+
+        [Menu("Keep Highest ID Scroll Stack")]
+        public ToggleNode KeepHighestIDStack { get; set; } = new(false);
+
         public ToggleNode Enable { get; set; } = new(false);
 
         public int[,] IgnoredCells { get; set; } = new int[5, 12];
