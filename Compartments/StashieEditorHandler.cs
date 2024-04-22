@@ -220,14 +220,6 @@ public class StashieEditorHandler
 
         #endregion
 
-        if (ShowButtonPopup(OverwritePopup, ["Are you sure?", "STOP"], out var saveSelectedIndex))
-        {
-            if (saveSelectedIndex == 0)
-            {
-                FileManager.SaveToFile(Main.Settings.CurrentFilterOptions, FileSaveName);
-            }
-        }
-
         Main.Settings.CurrentFilterOptions.ParentMenu = tempFilters;
     }
 
@@ -381,6 +373,15 @@ public class StashieEditorHandler
         }
 
         ImGui.Unindent();
+
+
+        if (ShowButtonPopup(OverwritePopup, ["Are you sure?", "STOP"], out var saveSelectedIndex))
+        {
+            if (saveSelectedIndex == 0)
+            {
+                FileManager.SaveToFile(Main.Settings.CurrentFilterOptions, FileSaveName);
+            }
+        }
     }
 
     public static bool ShowButtonPopup(string popupId, List<string> items, out int selectedIndex)
