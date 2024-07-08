@@ -1,4 +1,3 @@
-
 ##### How does it work?
 Open your Stash and press the Hotkey to let Stashie stash your items.
 Edit your Filterfile to customize the stashing filters for advanced stashing strategies. 
