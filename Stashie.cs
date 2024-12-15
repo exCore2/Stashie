@@ -60,6 +60,14 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
         return true;
     }
 
+    public override void Render()
+    {
+        if (Settings.InspectInventoryItems && FilterManager.GetInventoryItems().Count > 0)
+        {
+            GameController.InspectObject(FilterManager.GetInventoryItems(), "Stashie item data");
+        }
+    }
+
     public override void DrawSettings()
     {
         ImGui.BeginTabBar("TabBar");

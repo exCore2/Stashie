@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using System.Windows.Forms;
 using ExileCore2.Shared.Attributes;
 using ExileCore2.Shared.Interfaces;
@@ -15,6 +16,10 @@ public class StashieSettings : ISettings
     [Menu("Filter File")] public ListNode FilterFile { get; set; } = new();
 
     [Menu("Stash Hotkey")] public HotkeyNode DropHotkey { get; set; } = Keys.F3;
+
+    [JsonIgnore]
+    [Menu("Debug Inspect Items", "Inspect inventory items as ItemFilterLibrary items.")]
+    public ToggleNode InspectInventoryItems { get; set; } = new(false);
 
     [Menu("Extra Delay", "Delay to wait after each inventory clearing attempt(in ms).")]
     public RangeNode<int> ExtraDelay { get; set; } = new(25, 0, 2000);

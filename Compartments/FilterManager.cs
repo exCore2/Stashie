@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -125,5 +126,18 @@ internal class FilterManager
         #endregion
 
         return true;
+    }
+
+    public static List<ItemData> GetInventoryItems()
+    {
+        var serverData = Main.GameController.Game.IngameState.Data.ServerData;
+        var invItems = serverData.PlayerInventories[0].Inventory.InventorySlotItems;
+
+        Main.DropItems = [];
+        Main.ClickWindowOffset = Main.GameController.Window.GetWindowRectangle().TopLeft;
+
+        return (from invItem in invItems
+            where invItem.Item != null && invItem.Address != 0
+            select new ItemData(invItem.Item, Main.GameController)).ToList();
     }
 }
