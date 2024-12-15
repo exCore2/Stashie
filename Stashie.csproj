@@ -12,56 +12,23 @@
     <DebugType>embedded</DebugType>
     <PathMap>$(MSBuildProjectDirectory)=$(MSBuildProjectName)</PathMap>
     <EmbedAllSources>true</EmbedAllSources>
-    <OutputPath>$(exapiPackage)\Plugins\Compiled\Stashie\</OutputPath>
-  </PropertyGroup>
-  <PropertyGroup>
-    <PostBuildEvent>
-			cd "$(OutputPath)"
-			for /r %%i in (*.dll) do (
-			if not "%%~nxi" == "Stashie.dll" (
-			echo Deleting "%%i"
-			del /q "%%i"
-			)
-			)
-			for /d /r %%i in (*) do (
-			if not "%%~nxi" == "Stashie" (
-			echo Deleting directory "%%i"
-			rd /s /q "%%i"
-			)
-			)
-		</PostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ExileCore">
-      <HintPath>$(exapiPackage)\ExileCore.dll</HintPath>
+    <PackageReference Include="ImGui.NET" Version="1.90.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="ExileCore2">
+      <HintPath>$(exileCore2Package)\ExileCore2.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="GameOffsets">
-      <HintPath>$(exapiPackage)\GameOffsets.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="ImGui.NET">
-      <HintPath>$(exapiPackage)\ImGui.NET.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>$(exapiPackage)\Newtonsoft.Json.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="SharpDX">
-      <HintPath>$(exapiPackage)\SharpDX.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="SharpDX.Mathematics">
-      <HintPath>$(exapiPackage)\SharpDX.Mathematics.dll</HintPath>
+    <Reference Include="GameOffsets2">
+      <HintPath>$(exileCore2Package)\GameOffsets2.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="ItemFilterLibrary">
-      <HintPath>$(exapiPackage)\ItemFilterLibrary.dll</HintPath>
+      <HintPath>$(exileCore2Package)\ItemFilterLibrary.dll</HintPath>
       <Private>False</Private>
     </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Example Filters\" />
   </ItemGroup>
 </Project>

@@ -1,23 +1,21 @@
-﻿using ExileCore;
-using ExileCore.Shared;
+﻿using ExileCore2;
+using ExileCore2.Shared;
 using Stashie.Classes;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using static Stashie.StashieCore;
 
 namespace Stashie.Compartments;
 
 internal class StashTabNameCoRoutine
 {
-    public static readonly WaitTime Wait2Sec = new(2000);
-    public static readonly WaitTime Wait1Sec = new(1000);
     public static long _counterStashTabNamesCoroutine;
 
     public static void InitStashTabNameCoRoutine()
     {
-        Main.StashTabNamesCoroutine = new Coroutine(StashTabNamesUpdater_Thread(), Main, StashTabsNameChecker);
-        Core.ParallelRunner.Run(Main.StashTabNamesCoroutine);
+        TaskRunner.Run(StashTabNamesUpdater_Thread, StashTabsNameChecker);
     }
 
     public static void UpdateStashNames(ICollection<string> newNames)
@@ -113,20 +111,19 @@ internal class StashTabNameCoRoutine
         return index;
     }
 
-    public static IEnumerator StashTabNamesUpdater_Thread()
+    public static async SyncTask<bool> StashTabNamesUpdater_Thread()
     {
         while (true)
         {
             while (!Main.GameController.Game.IngameState.InGame)
-                yield return Wait2Sec;
+                await Task.Delay(2000);
 
             var stashPanel = Main.GameController.Game.IngameState?.IngameUi?.StashElement;
 
             while (stashPanel == null || !stashPanel.IsVisibleLocal)
-                yield return Wait1Sec;
+                await Task.Delay(1000);
 
             _counterStashTabNamesCoroutine++;
-            Main.StashTabNamesCoroutine?.UpdateTicks(_counterStashTabNamesCoroutine);
             var cachedNames = Main.Settings.AllStashNames;
             var realNames = stashPanel.AllStashNames;
 
@@ -146,7 +143,7 @@ internal class StashTabNameCoRoutine
                 break;
             }
 
-            yield return Wait1Sec;
+            await Task.Delay(1000);
         }
     }
 }

@@ -1,5 +1,5 @@
-﻿using ExileCore;
-using ExileCore.Shared;
+﻿using ExileCore2;
+using ExileCore2.Shared;
 using ImGuiNET;
 using Stashie.Classes;
 using Stashie.Compartments;
@@ -21,8 +21,6 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
     public static List<string> RenamedAllStashNames;
     public readonly Stopwatch DebugTimer = new Stopwatch();
     public Vector2N ClickWindowOffset;
-    public long CoroutineIteration;
-    public Coroutine CoroutineWorker;
 
     public List<CustomFilter> currentFilter;
     public List<FilterResult> DropItems;
@@ -30,7 +28,6 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
     public bool IsFilterEditorTab;
     public List<ListIndexNode> SettingsListNodes;
     public string[] StashTabNamesByIndex;
-    public Coroutine StashTabNamesCoroutine;
     public int VisibleStashIndex = -1;
 
     public StashieCore()
@@ -45,12 +42,11 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
         {
             if (b)
             {
-                if (Core.ParallelRunner.FindByName(StashTabsNameChecker) == null) StashTabNameCoRoutine.InitStashTabNameCoRoutine();
-                StashTabNamesCoroutine?.Resume();
+                    StashTabNameCoRoutine.InitStashTabNameCoRoutine();
             }
             else
             {
-                StashTabNamesCoroutine?.Pause();
+                TaskRunner.Stop(StashTabsNameChecker);
             }
 
             Utility.SetupOrClose();
@@ -116,7 +112,7 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
                 break;
 
             case "start_stashie":
-                if (Core.ParallelRunner.FindByName(CoroutineName) == null)
+                if (TaskRunner.Has(CoroutineName))
                 {
                     ActionCoRoutine.StartDropItemsToStashCoroutine();
                 }
@@ -127,36 +123,34 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
 
     public override void AreaChange(AreaInstance area)
     {
-        if (StashTabNamesCoroutine == null) return;
-        if (StashTabNamesCoroutine.Running)
+        if (area.IsHideout || area.IsTown)
         {
-            if (!area.IsHideout && !area.IsTown && !area.DisplayName.Contains("Azurite Mine")) StashTabNamesCoroutine?.Pause();
+            StashTabNameCoRoutine.InitStashTabNameCoRoutine();
         }
         else
         {
-            if (area.IsHideout || area.IsTown || area.DisplayName.Contains("Azurite Mine")) StashTabNamesCoroutine?.Resume();
+            TaskRunner.Stop(StashTabsNameChecker);
         }
     }
 
-    public override Job Tick()
+    public override void Tick()
     {
-        if (!StashingRequirementsMet() && Core.ParallelRunner.FindByName("Stashie_DropItemsToStash") != null)
+        if (!StashingRequirementsMet())
         {
-            ActionCoRoutine.StopCoroutine("Stashie_DropItemsToStash");
-            return null;
+            TaskRunner.Stop("Stashie_DropItemsToStash");
+            return;
         }
 
-        if (!Settings.DropHotkey.PressedOnce()) return null;
-        if (Core.ParallelRunner.FindByName("Stashie_DropItemsToStash") == null)
+        if (!Settings.DropHotkey.PressedOnce()) return;
+
+        if (TaskRunner.Has("Stashie_DropItemsToStash"))
         {
-            ActionCoRoutine.StartDropItemsToStashCoroutine();
+            ActionCoRoutine.StopCoroutine("Stashie_DropItemsToStash");
         }
         else
         {
-            ActionCoRoutine.StopCoroutine("Stashie_DropItemsToStash");
+            ActionCoRoutine.StartDropItemsToStashCoroutine();
         }
-
-        return null;
     }
 
     public bool StashingRequirementsMet() => GameController.Game.IngameState.IngameUi.InventoryPanel.IsVisible && GameController.Game.IngameState.IngameUi.StashElement.IsVisibleLocal;

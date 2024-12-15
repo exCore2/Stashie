@@ -1,4 +1,4 @@
-﻿using ExileCore;
+﻿using ExileCore2;
 using ItemFilterLibrary;
 using Newtonsoft.Json;
 using Stashie.Classes;
