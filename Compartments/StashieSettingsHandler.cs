@@ -1,12 +1,12 @@
-﻿using ExileCore;
-using ExileCore.PoEMemory.Components;
-using ExileCore.PoEMemory.MemoryObjects;
-using ExileCore.Shared.Enums;
+﻿using ExileCore2;
+using ExileCore2.PoEMemory.Components;
+using ExileCore2.PoEMemory.MemoryObjects;
+using ExileCore2.Shared.Enums;
 using ImGuiNET;
-using SharpDX;
 using Stashie.Classes;
 using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using static Stashie.StashieCore;
 using Vector2N = System.Numerics.Vector2;
@@ -26,10 +26,6 @@ public class StashieSettingsHandler
             // Player Inventory
             var inventory_server = Main.GameController.IngameState.Data.ServerData.PlayerInventories[(int)InventorySlotE.MainInventory1];
             UpdateIgnoredCells(inventory_server, Main.Settings.IgnoredCells);
-
-            // Affliction Rucksack
-            var backpack_server = Main.GameController.IngameState.Data.ServerData.PlayerInventories[(int)InventorySlotE.ExpandedMainInventory1];
-            UpdateIgnoredCells(backpack_server, Main.Settings.IgnoredExpandedCells);
         }
         catch (Exception e)
         {

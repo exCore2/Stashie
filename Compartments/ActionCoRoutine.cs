@@ -1,9 +1,50 @@
-﻿using ExileCore;
-using ExileCore.Shared;
+﻿using System;
+using ExileCore2;
+using ExileCore2.Shared;
 using System.Collections;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using static Stashie.StashieCore;
 
 namespace Stashie.Compartments;
+
+public static class TaskRunner
+{
+    private static readonly ConcurrentDictionary<string, CancellationTokenSource> Tasks = [];
+
+    public static void Run(Func<SyncTask<bool>> task, string name)
+    {
+        var cts = new CancellationTokenSource();
+        Tasks[name] = cts;
+        Task.Run(async () =>
+        {
+            var sTask = task();
+            while (sTask != null && !cts.Token.IsCancellationRequested)
+            {
+                TaskUtils.RunOrRestart(ref sTask, () => null);
+                await TaskUtils.NextFrame();
+            }
+
+            Tasks.TryRemove(new KeyValuePair<string, CancellationTokenSource>(name, cts));
+        });
+    }
+
+    public static void Stop(string name)
+    {
+        if (Tasks.TryGetValue(name, out var cts))
+        {
+            cts.Cancel();
+            Tasks.TryRemove(new KeyValuePair<string, CancellationTokenSource>(name, cts));
+        }
+    }
+
+    public static bool Has(string name)
+    {
+        return Tasks.ContainsKey(name);
+    }
+}
 
 internal class ActionCoRoutine
 {
@@ -11,60 +52,60 @@ internal class ActionCoRoutine
     {
         Main.DebugTimer.Reset();
         Main.DebugTimer.Start();
-        Core.ParallelRunner.Run(new Coroutine(DropToStashRoutine(), Main, "Stashie_DropItemsToStash"));
+        TaskRunner.Run(DropToStashRoutine, "Stashie_DropItemsToStash");
     }
 
     public static void StopCoroutine(string routineName)
     {
-        var routine = Core.ParallelRunner.FindByName(routineName);
-        routine?.Done();
+        TaskRunner.Stop(routineName);
         Main.DebugTimer.Stop();
         Main.DebugTimer.Reset();
         ActionsHandler.CleanUp();
         Main.PublishEvent("stashie_finish_drop_items_to_stash_tab", null);
     }
 
-    public static IEnumerator ProcessSwitchToTab(int index)
+    public static async SyncTask<bool> ProcessSwitchToTab(int index)
     {
         Main.DebugTimer.Restart();
-        yield return ActionsHandler.SwitchToTab(index);
-        Main.CoroutineWorker = Core.ParallelRunner.FindByName(CoroutineName);
-        Main.CoroutineWorker?.Done();
+        await ActionsHandler.SwitchToTab(index);
+        TaskRunner.Stop(CoroutineName);
 
         Main.DebugTimer.Restart();
         Main.DebugTimer.Stop();
+        return true;
     }
 
-    public static IEnumerator DropToStashRoutine()
+    public static async SyncTask<bool> DropToStashRoutine()
     {
-        var cursorPosPreMoving = Input.ForceMousePositionNum;
+        var cursorPosPreMoving = Input.ForceMousePosition;
 
         //try stashing items 3 times
         var originTab = ActionsHandler.GetIndexOfCurrentVisibleTab();
-        yield return FilterManager.ParseItems();
+        await FilterManager.ParseItems();
         for (var tries = 0; tries < 3 && Main.DropItems.Count > 0; ++tries)
         {
             if (Main.DropItems.Count > 0)
-                yield return ActionsHandler.StashItemsIncrementer();
+                await ActionsHandler.StashItemsIncrementer();
 
-            yield return FilterManager.ParseItems();
-            yield return new WaitTime(Main.Settings.ExtraDelay);
+            await FilterManager.ParseItems();
+            await Task.Delay(Main.Settings.ExtraDelay);
         }
 
         if (Main.Settings.VisitTabWhenDone.Value)
         {
             if (Main.Settings.BackToOriginalTab.Value)
             {
-                yield return ActionsHandler.SwitchToTab(originTab);
+                await ActionsHandler.SwitchToTab(originTab);
             }
             else
             {
-                yield return ActionsHandler.SwitchToTab(Main.Settings.TabToVisitWhenDone.Value);
+                await ActionsHandler.SwitchToTab(Main.Settings.TabToVisitWhenDone.Value);
             }
         }
 
         Input.SetCursorPos(cursorPosPreMoving);
         Input.MouseMove();
         StopCoroutine("Stashie_DropItemsToStash");
+        return true;
     }
 }

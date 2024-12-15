@@ -1,15 +1,15 @@
-﻿using ExileCore;
-using ExileCore.Shared;
-using ExileCore.Shared.Enums;
-using ExileCore.Shared.Helpers;
+﻿using ExileCore2;
+using ExileCore2.Shared;
+using ExileCore2.Shared.Enums;
+using ExileCore2.Shared.Helpers;
 using ItemFilterLibrary;
-using SharpDX;
 using Stashie.Classes;
 using System;
 using System.Collections;
 using System.IO;
 using System.Linq;
-using static ExileCore.PoEMemory.MemoryObjects.ServerInventory;
+using System.Threading;
+using static ExileCore2.PoEMemory.MemoryObjects.ServerInventory;
 using static Stashie.StashieCore;
 using Vector2N = System.Numerics.Vector2;
 
@@ -88,14 +88,14 @@ internal class FilterManager
         return null;
     }
 
-    public static IEnumerator ParseItems()
+    public static async SyncTask<bool> ParseItems()
     {
         var _serverData = Main.GameController.Game.IngameState.Data.ServerData;
         var invItems = _serverData.PlayerInventories[0].Inventory.InventorySlotItems;
 
-        yield return new WaitFunctionTimed(() => invItems != null, true, 500, "ServerInventory->InventSlotItems is null!");
+        await TaskUtils.CheckEveryFrameWithThrow(() => invItems != null, new CancellationTokenSource(500).Token);
         Main.DropItems = [];
-        Main.ClickWindowOffset = Main.GameController.Window.GetWindowRectangle().TopLeft.ToVector2Num();
+        Main.ClickWindowOffset = Main.GameController.Window.GetWindowRectangle().TopLeft;
 
         foreach (var invItem in invItems)
         {
@@ -106,28 +106,9 @@ internal class FilterManager
                 continue;
 
             var testItem = new ItemData(invItem.Item, Main.GameController);
-            var result = CheckFilters(testItem, invItem.GetClientRect().Center.ToVector2Num());
+            var result = CheckFilters(testItem, invItem.GetClientRect().Center);
             if (result != null)
                 Main.DropItems.Add(result);
-        }
-
-        if (Main.GameController.IngameState.IngameUi.InventoryPanel[InventoryIndex.PlayerExpandedInventory].IsVisible)
-        {
-            var inventoryInventorySlotItems = _serverData.PlayerInventories[(int)InventorySlotE.ExpandedMainInventory1].Inventory.InventorySlotItems;
-
-            foreach (var expandedInvItem in inventoryInventorySlotItems)
-            {
-                if (expandedInvItem.Item == null || expandedInvItem.Address == 0)
-                    continue;
-
-                if (Utility.CheckIgnoreCells(expandedInvItem, (4, 5), Main.Settings.IgnoredExpandedCells))
-                    continue;
-
-                var testItem = new ItemData(expandedInvItem.Item, Main.GameController);
-                var result = CheckFilters(testItem, GetExpandedClientRect(expandedInvItem).Center.ToVector2Num());
-                if (result != null)
-                    Main.DropItems.Add(result);
-            }
         }
 
         #region Ignore 1 max stack of wisdoms/portals
@@ -152,13 +133,7 @@ internal class FilterManager
         }
 
         #endregion
-    }
 
-    public static RectangleF GetExpandedClientRect(InventSlotItem item)
-    {
-        var playerInventElement = Main.GameController.IngameState.IngameUi.InventoryPanel[InventoryIndex.PlayerExpandedInventory];
-        var inventClientRect = playerInventElement.GetClientRect();
-        var cellSize = inventClientRect.Width / 4;
-        return item.Location.GetItemRect(inventClientRect.X, inventClientRect.Y, cellSize);
+        return true;
     }
 }

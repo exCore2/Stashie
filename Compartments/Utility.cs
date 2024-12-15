@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using static ExileCore.PoEMemory.MemoryObjects.ServerInventory;
+using static ExileCore2.PoEMemory.MemoryObjects.ServerInventory;
 
 namespace Stashie.Compartments;
 

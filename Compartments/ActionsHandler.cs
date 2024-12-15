@@ -1,10 +1,12 @@
-﻿using ExileCore;
-using ExileCore.Shared;
-using ExileCore.Shared.Enums;
+﻿using ExileCore2;
+using ExileCore2.Shared;
+using ExileCore2.Shared.Enums;
 using Stashie.Classes;
 using System;
 using System.Collections;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using static Stashie.StashieCore;
 
@@ -22,10 +24,11 @@ internal class ActionsHandler
 
     public static void HandleSwitchToTabEvent(object tab)
     {
+        Func<SyncTask<bool>> task = null;
         switch (tab)
         {
             case int index:
-                Main.CoroutineWorker = new Coroutine(ActionCoRoutine.ProcessSwitchToTab(index), Main, CoroutineName);
+                task = () => ActionCoRoutine.ProcessSwitchToTab(index);
                 break;
 
             case string name:
@@ -36,7 +39,7 @@ internal class ActionsHandler
                 }
 
                 var tempIndex = RenamedAllStashNames.IndexOf(name);
-                Main.CoroutineWorker = new Coroutine(ActionCoRoutine.ProcessSwitchToTab(tempIndex), Main, CoroutineName);
+                task = () => ActionCoRoutine.ProcessSwitchToTab(tempIndex);
                 DebugWindow.LogMsg($"{Main.Name}: Switching to tab with index: {tempIndex} ('{name}').");
                 break;
 
@@ -45,26 +48,30 @@ internal class ActionsHandler
                 break;
         }
 
-        Core.ParallelRunner.Run(Main.CoroutineWorker);
+        if (task != null)
+        {
+            TaskRunner.Run(task, CoroutineName);
+        }
     }
 
-    public static IEnumerator SwitchToTab(int tabIndex)
+    public static async SyncTask<bool> SwitchToTab(int tabIndex)
     {
         Main.VisibleStashIndex = GetIndexOfCurrentVisibleTab();
         var travelDistance = Math.Abs(tabIndex - Main.VisibleStashIndex);
         if (travelDistance == 0)
-            yield break;
+            return true;
 
-        yield return SwitchToTabViaArrowKeys(tabIndex);
+        await SwitchToTabViaArrowKeys(tabIndex);
 
-        yield return Delay();
+        await Delay();
+        return true;
     }
 
-    public static IEnumerator SwitchToTabViaArrowKeys(int tabIndex, int numberOfTries = 1)
+    public static async SyncTask<bool> SwitchToTabViaArrowKeys(int tabIndex, int numberOfTries = 1)
     {
         if (numberOfTries >= 3)
         {
-            yield break;
+            return true;
         }
 
         var indexOfCurrentVisibleTab = GetIndexOfCurrentVisibleTab();
@@ -74,31 +81,39 @@ internal class ActionsHandler
 
         if (tabIsToTheLeft)
         {
-            yield return PressKey(Keys.Left, travelDistance);
+            await PressKey(Keys.Left, travelDistance);
         }
         else
         {
-            yield return PressKey(Keys.Right, travelDistance);
+            await PressKey(Keys.Right, travelDistance);
         }
 
         if (GetIndexOfCurrentVisibleTab() != tabIndex)
         {
-            yield return Delay(20);
-            yield return SwitchToTabViaArrowKeys(tabIndex, numberOfTries + 1);
+            await Delay(20);
+            await SwitchToTabViaArrowKeys(tabIndex, numberOfTries + 1);
         }
+
+        return true;
     }
 
-    public static IEnumerator PressKey(Keys key, int repetitions = 1)
+    public static async SyncTask<bool> PressKey(Keys key, int repetitions = 1)
     {
         for (var i = 0; i < repetitions; i++)
         {
-            yield return Input.KeyPress(key);
+            Input.KeyDown(key);
+            await Task.Delay(100);
+            Input.KeyUp(key);
+            await Task.Delay(100);
         }
+
+        return true;
     }
 
-    public static IEnumerator Delay(int ms = 0)
+    public static async SyncTask<bool> Delay(int ms = 0)
     {
-        yield return new WaitTime(Main.Settings.ExtraDelay.Value + ms);
+        await Task.Delay(Main.Settings.ExtraDelay.Value+ms);
+        return true;
     }
 
     public static InventoryType GetTypeOfCurrentVisibleStash()
@@ -107,14 +122,13 @@ internal class ActionsHandler
         return stashPanelVisibleStash?.InvType ?? InventoryType.InvalidInventory;
     }
 
-    public static IEnumerator StashItemsIncrementer()
+    public static async SyncTask<bool> StashItemsIncrementer()
     {
-        Main.CoroutineIteration++;
-
-        yield return StashItems();
+        await StashItems();
+        return true;
     }
 
-    public static IEnumerator StashItems()
+    public static async SyncTask<bool> StashItems()
     {
         Main.PublishEvent("stashie_start_drop_items", null);
 
@@ -122,7 +136,7 @@ internal class ActionsHandler
         if (Main.VisibleStashIndex < 0)
         {
             Main.LogMessage($"Stashie: VisibleStashIndex was invalid: {Main.VisibleStashIndex}, stopping.");
-            yield break;
+            return true;
         }
 
         var itemsSortedByStash = Main.DropItems.OrderBy(x => x.SkipSwitchTab || x.StashIndex == Main.VisibleStashIndex ? 0 : 1).ThenBy(x => x.StashIndex).ToList();
@@ -131,30 +145,30 @@ internal class ActionsHandler
         Main.LogMessage($"Want to drop {itemsSortedByStash.Count} items.");
         foreach (var stashResult in itemsSortedByStash)
         {
-            Main.CoroutineIteration++;
-            Main.CoroutineWorker?.UpdateTicks(Main.CoroutineIteration);
             var maxTryTime = Main.DebugTimer.ElapsedMilliseconds + 2000;
 
             //move to correct tab
             if (!stashResult.SkipSwitchTab)
-                yield return SwitchToTab(stashResult.StashIndex);
+                await SwitchToTab(stashResult.StashIndex);
 
-            yield return new WaitFunctionTimed(() => Main.GameController.IngameState.IngameUi.StashElement.AllInventories[Main.VisibleStashIndex] != null, true, 2000,
-                $"Error while loading tab, Index: {Main.VisibleStashIndex}"); //maybe replace waittime with Setting option
+            await TaskUtils.CheckEveryFrameWithThrow(() => Main.GameController.IngameState.IngameUi.StashElement.AllInventories[Main.VisibleStashIndex] != null, new CancellationTokenSource(2000).Token);
+            //maybe replace waittime with Setting option
 
-            yield return new WaitFunctionTimed(() => GetTypeOfCurrentVisibleStash() != InventoryType.InvalidInventory, true, 2000,
-                $"Error with inventory type, Index: {Main.VisibleStashIndex}"); //maybe replace waittime with Setting option
+            await TaskUtils.CheckEveryFrameWithThrow(() => GetTypeOfCurrentVisibleStash() != InventoryType.InvalidInventory, new CancellationTokenSource(2000).Token);
+            //maybe replace waittime with Setting option
 
-            yield return StashItem(stashResult);
+            await StashItem(stashResult);
 
             Main.DebugTimer.Restart();
         }
+
+        return true;
     }
 
-    public static IEnumerator StashItem(FilterResult stashResult)
+    public static async SyncTask<bool> StashItem(FilterResult stashResult)
     {
         Input.SetCursorPos(stashResult.ClickPos + Main.ClickWindowOffset);
-        yield return new WaitTime(Main.Settings.HoverItemDelay);
+        await Task.Delay(Main.Settings.HoverItemDelay);
         var shiftUsed = false;
         if (stashResult.ShiftForStashing)
         {
@@ -168,6 +182,7 @@ internal class ActionsHandler
             Input.KeyUp(Keys.ShiftKey);
         }
 
-        yield return new WaitTime(Main.Settings.StashItemDelay);
+        await Task.Delay(Main.Settings.StashItemDelay);
+        return true;
     }
 }
