@@ -62,9 +62,14 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
 
     public override void Render()
     {
-        if (Settings.InspectInventoryItems && FilterManager.GetInventoryItems().Count > 0)
+        try
         {
-            GameController.InspectObject(FilterManager.GetInventoryItems(), "Stashie item data");
+            if (Settings.InspectInventoryItems)
+                GameController.InspectObject(FilterManager.GetInventoryItems(), "Stashie item data");
+        }
+        catch
+        {
+            // Dont actually care what happens, if you leave it on I guess dont.
         }
     }
 
