@@ -1,20 +1,22 @@
-﻿using ExileCore2;
-using ExileCore2.Shared;
-using ExileCore2.Shared.Enums;
-using Stashie.Classes;
-using System;
-using System.Collections;
+﻿using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using ExileCore2;
+using ExileCore2.Shared;
+using ExileCore2.Shared.Enums;
+using Stashie.Classes;
 using static Stashie.StashieCore;
 
 namespace Stashie.Compartments;
 
 internal class ActionsHandler
 {
-    public static int GetIndexOfCurrentVisibleTab() => Main.GameController.Game.IngameState.IngameUi.StashElement.IndexVisibleStash;
+    public static int GetIndexOfCurrentVisibleTab()
+    {
+        return Main.GameController.Game.IngameState.IngameUi.StashElement.IndexVisibleStash;
+    }
 
     public static void CleanUp()
     {
@@ -48,10 +50,7 @@ internal class ActionsHandler
                 break;
         }
 
-        if (task != null)
-        {
-            TaskRunner.Run(task, CoroutineName);
-        }
+        if (task != null) TaskRunner.Run(task, CoroutineName);
     }
 
     public static async SyncTask<bool> SwitchToTab(int tabIndex)
@@ -69,10 +68,7 @@ internal class ActionsHandler
 
     public static async SyncTask<bool> SwitchToTabViaArrowKeys(int tabIndex, int numberOfTries = 1)
     {
-        if (numberOfTries >= 3)
-        {
-            return true;
-        }
+        if (numberOfTries >= 3) return true;
 
         var indexOfCurrentVisibleTab = GetIndexOfCurrentVisibleTab();
         var travelDistance = tabIndex - indexOfCurrentVisibleTab;
@@ -80,13 +76,9 @@ internal class ActionsHandler
         travelDistance = Math.Abs(travelDistance);
 
         if (tabIsToTheLeft)
-        {
             await PressKey(Keys.Left, travelDistance);
-        }
         else
-        {
             await PressKey(Keys.Right, travelDistance);
-        }
 
         if (GetIndexOfCurrentVisibleTab() != tabIndex)
         {
@@ -102,9 +94,9 @@ internal class ActionsHandler
         for (var i = 0; i < repetitions; i++)
         {
             Input.KeyDown(key);
-            await Task.Delay(100);
+            await Task.Delay(10);
             Input.KeyUp(key);
-            await Task.Delay(100);
+            await Task.Delay(10);
         }
 
         return true;
@@ -112,7 +104,7 @@ internal class ActionsHandler
 
     public static async SyncTask<bool> Delay(int ms = 0)
     {
-        await Task.Delay(Main.Settings.ExtraDelay.Value+ms);
+        await Task.Delay(Main.Settings.ExtraDelay.Value + ms);
         return true;
     }
 
@@ -139,22 +131,27 @@ internal class ActionsHandler
             return true;
         }
 
-        var itemsSortedByStash = Main.DropItems.OrderBy(x => x.SkipSwitchTab || x.StashIndex == Main.VisibleStashIndex ? 0 : 1).ThenBy(x => x.StashIndex).ToList();
+        var itemsSortedByStash = Main.DropItems
+            .OrderBy(x => x.SkipSwitchTab || x.StashIndex == Main.VisibleStashIndex ? 0 : 1).ThenBy(x => x.StashIndex)
+            .ToList();
 
         Input.KeyDown(Keys.LControlKey);
         Main.LogMessage($"Want to drop {itemsSortedByStash.Count} items.");
         foreach (var stashResult in itemsSortedByStash)
         {
-            var maxTryTime = Main.DebugTimer.ElapsedMilliseconds + 2000;
-
             //move to correct tab
             if (!stashResult.SkipSwitchTab)
                 await SwitchToTab(stashResult.StashIndex);
 
-            await TaskUtils.CheckEveryFrameWithThrow(() => Main.GameController.IngameState.IngameUi.StashElement.AllInventories[Main.VisibleStashIndex] != null, new CancellationTokenSource(2000).Token);
+            await TaskUtils.CheckEveryFrameWithThrow(
+                () => Main.GameController.IngameState.IngameUi.StashElement.AllInventories[Main.VisibleStashIndex] !=
+                      null,
+                new CancellationTokenSource(Main.Settings.StashingCancelTimer.Value).Token);
             //maybe replace waittime with Setting option
 
-            await TaskUtils.CheckEveryFrameWithThrow(() => GetTypeOfCurrentVisibleStash() != InventoryType.InvalidInventory, new CancellationTokenSource(2000).Token);
+            await TaskUtils.CheckEveryFrameWithThrow(
+                () => GetTypeOfCurrentVisibleStash() != InventoryType.InvalidInventory,
+                new CancellationTokenSource(Main.Settings.StashingCancelTimer.Value).Token);
             //maybe replace waittime with Setting option
 
             await StashItem(stashResult);
@@ -177,10 +174,7 @@ internal class ActionsHandler
         }
 
         Input.Click(MouseButtons.Left);
-        if (shiftUsed)
-        {
-            Input.KeyUp(Keys.ShiftKey);
-        }
+        if (shiftUsed) Input.KeyUp(Keys.ShiftKey);
 
         await Task.Delay(Main.Settings.StashItemDelay);
         return true;

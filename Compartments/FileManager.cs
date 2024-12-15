@@ -1,14 +1,17 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Newtonsoft.Json;
 
 namespace Stashie.Compartments;
 
 public static class FileManager
 {
-    private static string GetFullPath(string fileName, string extension = "") => Path.Combine(StashieCore.Main.ConfigDirectory, $"{fileName}{extension}");
+    private static string GetFullPath(string fileName, string extension = "")
+    {
+        return Path.Combine(StashieCore.Main.ConfigDirectory, $"{fileName}{extension}");
+    }
 
     private static void HandleException(Exception e, string fullPath, bool isSaving, int logLevel = 15)
     {
@@ -66,7 +69,8 @@ public static class FileManager
         try
         {
             var dirInfo = new DirectoryInfo(searchDirectory);
-            filesList = dirInfo.GetFiles($"*{extension}", SearchOption.AllDirectories).Select(file => Path.GetFileNameWithoutExtension(file.Name)).ToList();
+            filesList = dirInfo.GetFiles($"*{extension}", SearchOption.AllDirectories)
+                .Select(file => Path.GetFileNameWithoutExtension(file.Name)).ToList();
         }
         catch (Exception e)
         {

@@ -1,15 +1,18 @@
-﻿using Stashie.Classes;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using Stashie.Classes;
 using static ExileCore2.PoEMemory.MemoryObjects.ServerInventory;
 
 namespace Stashie.Compartments;
 
 internal class Utility
 {
-    public static void SaveDefaultConfigsToDisk() =>
-        WriteToNonExistentFile($"{StashieCore.Main.ConfigDirectory}\\example filter.txt", "https://github.com/DetectiveSquirrel/Stashie/blob/master/Example%20Filter/Example.json");
+    public static void SaveDefaultConfigsToDisk()
+    {
+        WriteToNonExistentFile($"{StashieCore.Main.ConfigDirectory}\\example filter.txt",
+            "https://github.com/DetectiveSquirrel/Stashie/blob/master/Example%20Filter/Example.json");
+    }
 
     public static void WriteToNonExistentFile(string path, string content)
     {
@@ -32,7 +35,8 @@ internal class Utility
 
         try
         {
-            StashieCore.Main.Settings.TabToVisitWhenDone.Max = (int)StashieCore.Main.GameController.Game.IngameState.IngameUi.StashElement.TotalStashes - 1;
+            StashieCore.Main.Settings.TabToVisitWhenDone.Max =
+                (int)StashieCore.Main.GameController.Game.IngameState.IngameUi.StashElement.TotalStashes - 1;
             var names = StashieCore.Main.GameController.Game.IngameState.IngameUi.StashElement.AllStashNames;
             StashTabNameCoRoutine.UpdateStashNames(names);
         }
@@ -42,7 +46,8 @@ internal class Utility
         }
     }
 
-    public static bool CheckIgnoreCells(InventSlotItem inventItem, (int Width, int Height) containerSize, int[,] ignoredCells)
+    public static bool CheckIgnoreCells(InventSlotItem inventItem, (int Width, int Height) containerSize,
+        int[,] ignoredCells)
     {
         var inventPosX = inventItem.PosX;
         var inventPosY = inventItem.PosY;

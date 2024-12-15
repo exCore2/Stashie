@@ -1,6 +1,6 @@
-﻿using ItemFilterLibrary;
+﻿using System.Collections.Generic;
+using ItemFilterLibrary;
 using Stashie.Classes;
-using System.Collections.Generic;
 
 namespace Stashie.Filter;
 

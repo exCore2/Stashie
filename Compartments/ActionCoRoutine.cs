@@ -1,11 +1,10 @@
 ﻿using System;
-using ExileCore2;
-using ExileCore2.Shared;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using ExileCore2;
+using ExileCore2.Shared;
 using static Stashie.StashieCore;
 
 namespace Stashie.Compartments;
@@ -94,13 +93,9 @@ internal class ActionCoRoutine
         if (Main.Settings.VisitTabWhenDone.Value)
         {
             if (Main.Settings.BackToOriginalTab.Value)
-            {
                 await ActionsHandler.SwitchToTab(originTab);
-            }
             else
-            {
                 await ActionsHandler.SwitchToTab(Main.Settings.TabToVisitWhenDone.Value);
-            }
         }
 
         Input.SetCursorPos(cursorPosPreMoving);

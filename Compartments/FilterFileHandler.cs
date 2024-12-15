@@ -1,11 +1,11 @@
-﻿using ExileCore2;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using ExileCore2;
 using ItemFilterLibrary;
 using Newtonsoft.Json;
 using Stashie.Classes;
 using Stashie.Filter;
-using System;
-using System.Collections.Generic;
-using System.IO;
 
 namespace Stashie.Compartments;
 
@@ -34,11 +34,10 @@ public class FilterFileHandler
                     var filterErrorParse = compiledQuery.FailedToCompile;
 
                     if (filterErrorParse)
-                    {
-                        DebugWindow.LogError($"[Stashie] JSON Error loading. Parent: {parentMenu.MenuName}, Filter: {filter.FilterName}", 15);
-                    }
+                        DebugWindow.LogError(
+                            $"[Stashie] JSON Error loading. Parent: {parentMenu.MenuName}, Filter: {filter.FilterName}",
+                            15);
                     else
-                    {
                         newParent.Filters.Add(new CustomFilter.Filter
                         {
                             FilterName = filter.FilterName,
@@ -47,7 +46,6 @@ public class FilterFileHandler
                             Affinity = filter.Affinity ?? false,
                             CompiledQuery = compiledQuery
                         });
-                    }
                 }
 
                 if (newParent.Filters.Count > 0)

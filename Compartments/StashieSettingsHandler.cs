@@ -1,13 +1,13 @@
-﻿using ExileCore2;
+﻿using System;
+using System.Diagnostics;
+using System.Drawing;
+using System.IO;
+using ExileCore2;
 using ExileCore2.PoEMemory.Components;
 using ExileCore2.PoEMemory.MemoryObjects;
 using ExileCore2.Shared.Enums;
 using ImGuiNET;
 using Stashie.Classes;
-using System;
-using System.Diagnostics;
-using System.Drawing;
-using System.IO;
 using static Stashie.StashieCore;
 using Vector2N = System.Numerics.Vector2;
 using Vector4N = System.Numerics.Vector4;
@@ -24,7 +24,8 @@ public class StashieSettingsHandler
         try
         {
             // Player Inventory
-            var inventory_server = Main.GameController.IngameState.Data.ServerData.PlayerInventories[(int)InventorySlotE.MainInventory1];
+            var inventory_server =
+                Main.GameController.IngameState.Data.ServerData.PlayerInventories[(int)InventorySlotE.MainInventory1];
             UpdateIgnoredCells(inventory_server, Main.Settings.IgnoredCells);
         }
         catch (Exception e)
@@ -60,7 +61,8 @@ public class StashieSettingsHandler
                 ImGui.TextColored(new Vector4N(0f, 1f, 0.022f, 1f), parent.ParentMenuName);
 
                 foreach (var filter in parent.Filters)
-                    if (Main.Settings.CustomFilterOptions.TryGetValue(parent.ParentMenuName + filter.FilterName, out var indexNode))
+                    if (Main.Settings.CustomFilterOptions.TryGetValue(parent.ParentMenuName + filter.FilterName,
+                            out var indexNode))
                     {
                         var strId = $"{filter.FilterName}##{parent.ParentMenuName + filter.FilterName}";
 
@@ -79,23 +81,20 @@ public class StashieSettingsHandler
                         if (string.IsNullOrWhiteSpace(filterName))
                             filterName = "Null";
 
-                        if (ImGui.Combo($"##{parent.ParentMenuName + filter.FilterName}", ref item, Main.StashTabNamesByIndex, Main.StashTabNamesByIndex.Length))
+                        if (ImGui.Combo($"##{parent.ParentMenuName + filter.FilterName}", ref item,
+                                Main.StashTabNamesByIndex, Main.StashTabNamesByIndex.Length))
                         {
                             indexNode.Value = Main.StashTabNamesByIndex[item];
-                            StashTabNameCoRoutine.OnSettingsStashNameChanged(indexNode, Main.StashTabNamesByIndex[item]);
+                            StashTabNameCoRoutine.OnSettingsStashNameChanged(indexNode,
+                                Main.StashTabNamesByIndex[item]);
                         }
 
                         var specialTag = "";
 
-                        if (filter.Shifting != null && (bool)filter.Shifting)
-                        {
-                            specialTag += "Holds Shift";
-                        }
+                        if (filter.Shifting != null && (bool)filter.Shifting) specialTag += "Holds Shift";
 
                         if (filter.Affinity != null && (bool)filter.Affinity)
-                        {
                             specialTag += !string.IsNullOrEmpty(specialTag) ? ", Expects Affinity" : "Expects Affinity";
-                        }
 
                         ImGui.SameLine();
                         ImGui.Text($"{specialTag}");
@@ -104,7 +103,8 @@ public class StashieSettingsHandler
                         ImGui.Columns(1, "", false);
                         var pop = true;
 
-                        if (!ImGui.BeginPopupModal(strId, ref pop, ImGuiWindowFlags.NoResize | ImGuiWindowFlags.AlwaysAutoResize))
+                        if (!ImGui.BeginPopupModal(strId, ref pop,
+                                ImGuiWindowFlags.NoResize | ImGuiWindowFlags.AlwaysAutoResize))
                             continue;
 
                         var x = 0;
@@ -133,7 +133,7 @@ public class StashieSettingsHandler
                     }
                     else
                     {
-                        indexNode = new ListIndexNode {Value = "Ignore", Index = -1};
+                        indexNode = new ListIndexNode { Value = "Ignore", Index = -1 };
                     }
             };
     }
@@ -158,7 +158,8 @@ public class StashieSettingsHandler
             ImGui.SameLine();
             ImGui.TextDisabled("(?)");
             if (ImGui.IsItemHovered())
-                ImGui.SetTooltip($"Checked = Item will be ignored{Environment.NewLine}UnChecked = Item will be processed");
+                ImGui.SetTooltip(
+                    $"Checked = Item will be ignored{Environment.NewLine}UnChecked = Item will be processed");
         }
         catch (Exception e)
         {
@@ -215,10 +216,7 @@ public class StashieSettingsHandler
                 // Log error when the config directory doesn't exist
             }
 
-            if (configDir != null)
-            {
-                Process.Start("explorer.exe", configDir);
-            }
+            if (configDir != null) Process.Start("explorer.exe", configDir);
         }
     }
 }

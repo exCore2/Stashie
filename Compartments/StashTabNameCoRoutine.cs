@@ -1,10 +1,9 @@
-﻿using ExileCore2;
-using ExileCore2.Shared;
-using Stashie.Classes;
-using System;
-using System.Collections;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using ExileCore2;
+using ExileCore2.Shared;
+using Stashie.Classes;
 using static Stashie.StashieCore;
 
 namespace Stashie.Compartments;
@@ -74,7 +73,8 @@ internal class StashTabNameCoRoutine
                     }
                     else
                     {
-                        lOption.Value = RenamedAllStashNames[0]; //Actually it was "Ignore", we just update it (can be removed)
+                        lOption.Value =
+                            RenamedAllStashNames[0]; //Actually it was "Ignore", we just update it (can be removed)
                     }
                 }
                 else //tab just change it's index

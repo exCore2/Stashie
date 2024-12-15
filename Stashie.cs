@@ -1,13 +1,11 @@
-﻿using ExileCore2;
-using ExileCore2.Shared;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using ExileCore2;
 using ImGuiNET;
 using Stashie.Classes;
 using Stashie.Compartments;
 using Stashie.Filter;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
 using Vector2N = System.Numerics.Vector2;
 
 namespace Stashie;
@@ -19,7 +17,7 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
     public static StashieCore Main;
 
     public static List<string> RenamedAllStashNames;
-    public readonly Stopwatch DebugTimer = new Stopwatch();
+    public readonly Stopwatch DebugTimer = new();
     public Vector2N ClickWindowOffset;
 
     public List<CustomFilter> currentFilter;
@@ -41,13 +39,9 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
         Settings.Enable.OnValueChanged += (sender, b) =>
         {
             if (b)
-            {
-                    StashTabNameCoRoutine.InitStashTabNameCoRoutine();
-            }
+                StashTabNameCoRoutine.InitStashTabNameCoRoutine();
             else
-            {
                 TaskRunner.Stop(StashTabsNameChecker);
-            }
 
             Utility.SetupOrClose();
         };
@@ -69,15 +63,9 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
     public override void DrawSettings()
     {
         ImGui.BeginTabBar("TabBar");
-        if (ImGui.TabItemButton("Main Settings"))
-        {
-            IsFilterEditorTab = false;
-        }
+        if (ImGui.TabItemButton("Main Settings")) IsFilterEditorTab = false;
 
-        if (ImGui.TabItemButton("Filter Editor"))
-        {
-            IsFilterEditorTab = true;
-        }
+        if (ImGui.TabItemButton("Filter Editor")) IsFilterEditorTab = true;
 
         ImGui.EndTabBar();
 
@@ -100,10 +88,7 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
 
     public override void ReceiveEvent(string eventId, object args)
     {
-        if (!Settings.Enable.Value)
-        {
-            return;
-        }
+        if (!Settings.Enable.Value) return;
 
         switch (eventId)
         {
@@ -112,10 +97,7 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
                 break;
 
             case "start_stashie":
-                if (TaskRunner.Has(CoroutineName))
-                {
-                    ActionCoRoutine.StartDropItemsToStashCoroutine();
-                }
+                if (TaskRunner.Has(CoroutineName)) ActionCoRoutine.StartDropItemsToStashCoroutine();
 
                 break;
         }
@@ -124,13 +106,9 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
     public override void AreaChange(AreaInstance area)
     {
         if (area.IsHideout || area.IsTown)
-        {
             StashTabNameCoRoutine.InitStashTabNameCoRoutine();
-        }
         else
-        {
             TaskRunner.Stop(StashTabsNameChecker);
-        }
     }
 
     public override void Tick()
@@ -141,17 +119,18 @@ public class StashieCore : BaseSettingsPlugin<StashieSettings>
             return;
         }
 
-        if (!Settings.DropHotkey.PressedOnce()) return;
+        if (!Settings.DropHotkey.PressedOnce())
+            return;
 
         if (TaskRunner.Has("Stashie_DropItemsToStash"))
-        {
             ActionCoRoutine.StopCoroutine("Stashie_DropItemsToStash");
-        }
         else
-        {
             ActionCoRoutine.StartDropItemsToStashCoroutine();
-        }
     }
 
-    public bool StashingRequirementsMet() => GameController.Game.IngameState.IngameUi.InventoryPanel.IsVisible && GameController.Game.IngameState.IngameUi.StashElement.IsVisibleLocal;
+    public bool StashingRequirementsMet()
+    {
+        return GameController.Game.IngameState.IngameUi.InventoryPanel.IsVisible &&
+               GameController.Game.IngameState.IngameUi.StashElement.IsVisibleLocal;
+    }
 }
